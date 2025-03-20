@@ -95,7 +95,7 @@ const PeerProvider = ({ children }) => {
   const createIceCandidate = () => {
     peer.current.onicecandidate = (event) => {
       if (event.candidate) {
-        console.log("mil gaya");
+        console.log(event.candidate);
         setIceCandidate((prevCandidates) => [
           ...prevCandidates,
           event.candidate,
