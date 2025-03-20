@@ -12,7 +12,6 @@ import NavigationBar from "./Pages/NavigationBar/NavigationBar";
 import Login from "./Pages/Login/Login";
 import Features from "./Pages/Features/Features";
 import Safety from "./Pages/Safety/Safety";
-import Practise from "./Practise";
 
 const App = () => {
   const [isZoomed, setIsZoomed] = useState(false);
@@ -30,7 +29,6 @@ const App = () => {
               <Route path="/stream" element={<Stream setIsZoomed={setIsZoomed} isZoomed={isZoomed}/>}/>
               <Route path="/Safety" element={<Safety />} />
               <Route path="/login" element={<Login />} />
-              <Route path="/practise" element={<Practise />} />
             </Routes>
           </PeerProvider>
         </UserProvider>
