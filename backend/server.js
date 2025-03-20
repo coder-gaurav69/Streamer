@@ -54,7 +54,7 @@ io.on("connection", (socket) => {
     const [candidate, remoteName, remoteId, myId] = data;
     if (candidate) {
       console.log(`ICE Candidate sent from ${myId} to ${remoteId}`);
-      socket.to(remoteId).emit("receiveCandidate", candidate); // ✅ Send only the candidate object
+      socket.to(remoteId).emit("receiveCandidate", data); // Send full array
     }
   });
 
