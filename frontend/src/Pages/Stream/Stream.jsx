@@ -169,9 +169,8 @@ const Stream = ({ setIsZoomed, isZoomed }) => {
     setFindinguser(true);
   };
 
-  // ✅ Added missing handleBtn function
   const handleBtn = () => {
-    if (findingUser) {
+    if (toggler) {
       connectUser();
       console.log("connected");
       setToggler(false);
