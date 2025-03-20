@@ -5,7 +5,7 @@ const PeerContext = createContext(null);
 const PeerProvider = ({ children }) => {
   const peer = useRef(null);
   const remoteStreamRef = useRef(null);
-  const [iceCandidate,setIceCandidate] = useState([])
+  const [iceCandidate, setIceCandidate] = useState([]);
 
   const initializePeerConnection = () => {
     if (peer.current) {
@@ -87,36 +87,47 @@ const PeerProvider = ({ children }) => {
     await peer.current.setRemoteDescription(answer);
   };
 
+  const [processedCandidates, setProcessedCandidates] = useState([]);
+
   const createIceCandidate = () => {
     peer.current.onicecandidate = (event) => {
-        if (event.candidate) {
-            console.log('mil gaya')
-            setIceCandidate(prevCandidates => [...prevCandidates, event.candidate]); 
-        }
-    };
-};
-
-const receiveIceCandidate = async () => {
-  if (peer.current && iceCandidate.length > 0) {
-    try {
-      for (const candidate of iceCandidate) {
-        if (candidate) {
-          await peer.current.addIceCandidate(new RTCIceCandidate(candidate));
-        }
+      if (event.candidate) {
+        console.log("mil gaya");
+        setIceCandidate((prevCandidates) => [
+          ...prevCandidates,
+          event.candidate,
+        ]);
       }
-    } catch (error) {
-      console.error("Error adding ICE Candidate:", error);
+    };
+  };
+
+  const receiveIceCandidate = async () => {
+    if (peer.current && iceCandidate.length > 0) {
+      try {
+        const newCandidates = iceCandidate.filter(
+          (candidate) => !processedCandidates.includes(candidate)
+        );
+
+        for (const candidate of newCandidates) {
+          if (candidate) {
+            await peer.current.addIceCandidate(new RTCIceCandidate(candidate));
+          }
+        }
+
+        // ✅ Mark these candidates as processed
+        setProcessedCandidates((prev) => [...prev, ...newCandidates]);
+      } catch (error) {
+        console.error("Error adding ICE Candidate:", error);
+      }
+    } else {
+      console.warn("No new ICE Candidates available to add.");
     }
-  } else {
-    console.warn("No ICE Candidates available to add.");
-  }
-};
+  };
 
-
-  useEffect(()=>{
-    receiveIceCandidate()
-  },[iceCandidate])
-  
+  // ✅ This ensures dynamic updates without re-processing
+  useEffect(() => {
+    receiveIceCandidate();
+  }, [iceCandidate]);
 
   return (
     <PeerContext.Provider
