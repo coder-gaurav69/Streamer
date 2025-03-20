@@ -8,17 +8,14 @@ const PeerProvider = ({ children }) => {
 
   const initializePeerConnection = () => {
     if (peer.current) {
-      peer.current.onicecandidate = null;
-      peer.current.ontrack = null;
       peer.current.close();
-      peer.current = null;
     }
-  
+
     peer.current = new RTCPeerConnection({
       iceServers: [
         { urls: "stun:stun.l.google.com:19302" }, 
         { urls: "stun:global.stun.twilio.com:3478" },
-        { urls: "stun:ss-turn1.xirsys.com" },  
+        { urls: "stun:ss-turn1.xirsys.com" },  // Xirsys STUN server
         { 
           urls: [
             "turn:ss-turn1.xirsys.com:80?transport=udp",
@@ -33,17 +30,21 @@ const PeerProvider = ({ children }) => {
         }
       ],
     });
-  
+    
+    
+
     peer.current.ontrack = (event) => {
       if (!remoteStreamRef.current) {
         remoteStreamRef.current = new MediaStream();
       }
-  
+    
+      // Ensure only remote tracks are added
       event.streams[0].getTracks().forEach((track) => {
         if (!remoteStreamRef.current.srcObject) {
           remoteStreamRef.current.srcObject = new MediaStream();
         }
-  
+    
+        // Check if track is already added to avoid duplicates
         const existingTracks = remoteStreamRef.current.srcObject.getTracks();
         if (!existingTracks.includes(track)) {
           remoteStreamRef.current.srcObject.addTrack(track);
@@ -51,7 +52,6 @@ const PeerProvider = ({ children }) => {
       });
     };
   };
-  
 
   useEffect(() => {
     initializePeerConnection();
@@ -99,25 +99,13 @@ const PeerProvider = ({ children }) => {
       };
     });
   };
-  
+
   const receiveIceCandidate = async (iceCandidates) => {
     if (!iceCandidates?.length || !peer.current) return;
-  
-    // Reset ICE candidates before adding new ones
-    peer.current.onicecandidate = null;
-    peer.current.onicecandidate = (event) => {
-      if (event.candidate) {
-        iceCandidates.push(event.candidate);
-      }
-    };
-  
     await Promise.all(
-      iceCandidates.map((candidate) =>
-        peer.current.addIceCandidate(new RTCIceCandidate(candidate))
-      )
+      iceCandidates.map((candidate) => peer.current.addIceCandidate(new RTCIceCandidate(candidate)))
     );
   };
-  
 
   return (
     <PeerContext.Provider
