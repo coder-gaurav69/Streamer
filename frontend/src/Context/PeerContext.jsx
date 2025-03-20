@@ -1,10 +1,11 @@
-import React, { createContext, useEffect, useRef } from "react";
+import React, { createContext, useEffect, useRef, useState } from "react";
 
 const PeerContext = createContext(null);
 
 const PeerProvider = ({ children }) => {
   const peer = useRef(null);
   const remoteStreamRef = useRef(null);
+  const [iceCandidate,setIceCandidate] = useState([])
 
   const initializePeerConnection = () => {
     if (peer.current) {
@@ -88,15 +89,14 @@ const PeerProvider = ({ children }) => {
 
   const createIceCandidate = () => {
     peer.current.onicecandidate = (event) => {
-      if (event.candidate) {
-        return event.candidate
-      }
-    }
-  };
-  
+        if (event.candidate) {
+            setIceCandidate(prevCandidates => [...prevCandidates, event.candidate]); 
+        }
+    };
+};
 
-  const receiveIceCandidate = async (candidate) => {
-    if (candidate && peer.current) {
+  const receiveIceCandidate = async () => {
+    if (peer.current) {
       try {
         await peer.current.addIceCandidate(new RTCIceCandidate(candidate));
       } catch (error) {
@@ -104,6 +104,10 @@ const PeerProvider = ({ children }) => {
       }
     }
   };
+
+  useEffect(()=>{
+    receiveIceCandidate()
+  },[iceCandidate])
   
 
   return (

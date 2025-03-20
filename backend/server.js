@@ -44,15 +44,14 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("call", (data) => {
-    const [, offervalue, iceCandidate, , remoteId] = data;
-    socket.to(remoteId).emit("call", data);
-  });
+  socket.on("call", ([name, offervalue, myId, remoteId]) => {
+    socket.to(remoteId).emit("call",data);
+});
 
-  socket.on("answerCall", (data) => {
-    const [, answer, iceCandidate, remoteId] = data;
+socket.on("answerCall", ([name, answer, remoteId,myId]) => {
     socket.to(remoteId).emit("answerCall", data);
-  });
+});
+
 
 
   
