@@ -20,7 +20,7 @@ const Stream = ({ setIsZoomed, isZoomed }) => {
   } = useContext(PeerContext);
 
   const localStreamRef = useRef(null);
-  const [localStream, setLocalStream] = useState(null);
+  const [localStream,setLocalStream] = useState(null)
   const [toggler, setToggler] = useState(true);
   const [myId, setMyId] = useState(null);
   const [remoteName, setRemoteName] = useState(null);
@@ -32,39 +32,80 @@ const Stream = ({ setIsZoomed, isZoomed }) => {
   const getLocalStream = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { frameRate: 30 },
-        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+        video:{frameRate: 30},
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true, 
+        },
       });
 
-      if (stream) {
+      if (stream && localStreamRef.current) {
         localStreamRef.current.srcObject = stream;
-        localStreamRef.current.muted = true;
+        localStreamRef.current.muted = 'true';
         await addingTrack(stream);
-        setLocalStream(stream);
+        setLocalStream(stream)
       }
     } catch (error) {
       console.error("Error accessing media devices:", error);
     }
   };
 
+
+  const toggleVideoIcon = ()=>{
+    const videoTrack = localStream.getVideoTracks()[0];
+    videoTrack.enabled = !video;
+    console.log('video off')
+  }
+
+  const toggleAudioIcon = ()=>{
+    const audioTrack = localStream.getAudioTracks()[0];
+    audioTrack.enabled = !audio;
+    console.log('audio off')
+  }
+
   const approach = async ([remoteName, remoteId, myId]) => {
     setRemoteId(remoteId);
     setRemoteName(remoteName);
     const offervalue = await offer();
     const iceCandidate = await createIceCandidate();
-    socket.current.emit("call", [name, offervalue, iceCandidate, myId, remoteId]);
+    socket.current.emit("call", [
+      name,
+      offervalue,
+      iceCandidate,
+      myId,
+      remoteId,
+    ]);
   };
 
-  const answerCall = async ([remoteName, offer, remoteIceCandidate, remoteId, myId]) => {
+  const answerCall = async ([
+    remoteName,
+    offer,
+    remoteIceCandidate,
+    remoteId,
+    myId,
+  ]) => {
     setRemoteName(remoteName);
     const createdAnswer = await answer(offer);
     await receiveIceCandidate(remoteIceCandidate);
     const iceCandidate = await createIceCandidate();
-    socket.current.emit("answerCall", [name, createdAnswer, iceCandidate, remoteId, myId]);
+    socket.current.emit("answerCall", [
+      name,
+      createdAnswer,
+      iceCandidate,
+      remoteId,
+      myId,
+    ]);
     setFindinguser(false);
   };
 
-  const accept = async ([remoteName, answer, remoteIceCandidate, myId, remoteId]) => {
+  const accept = async ([
+    remoteName,
+    answer,
+    remoteIceCandidate,
+    myId,
+    remoteId,
+  ]) => {
     await acceptingAnswer(answer);
     await receiveIceCandidate(remoteIceCandidate);
     socket.current.emit("connectionEstablished", [myId, remoteId]);
@@ -74,49 +115,91 @@ const Stream = ({ setIsZoomed, isZoomed }) => {
   const connectUser = () => {
     socket.current.emit("AnyUser", [name, category]);
     socket.current.on("myId", (id) => setMyId(id));
+    socket.current.off("finding_users").on("finding_users", console.log);
     socket.current.off("approach").on("approach", approach);
     socket.current.off("call").on("call", answerCall);
     socket.current.off("answerCall").on("answerCall", accept);
-    socket.current.on("connectionEnd", handleDisconnection);
+    socket.current.on("connectionEnd", (msg) => {
+      if (remoteStreamRef.current) {
+        remoteStreamRef.current.srcObject = null;
+        handleDisconnection();
+      }
+    });
   };
 
   useEffect(() => {
     getLocalStream();
+
     return () => {
-      socket.current.off("approach");
-      socket.current.off("call");
-      socket.current.off("answerCall");
-      socket.current.off("connectionEnd");
+      if (socket.current) {
+        socket.current.off("finding_users");
+        socket.current.off("approach");
+        socket.current.off("call");
+        socket.current.off("answerCall");
+        socket.current.off("connectionEnd");
+      }
+      if (remoteStreamRef.current && remoteStreamRef.current.srcObject) {
+        remoteStreamRef.current.srcObject
+          .getTracks()
+          .forEach((track) => track.stop());
+        remoteStreamRef.current.srcObject = null;
+      }
     };
   }, []);
 
   const handleDisconnection = async () => {
-    socket.current.emit("connectionEnd", { userLeftId: myId, msg: "User left" });
-    if (remoteStreamRef.current) remoteStreamRef.current.srcObject = null;
+    console.log("Disconnected");
+    // Notify the server about the disconnection
+    socket.current.emit("connectionEnd", {
+      userLeftId: myId,
+      msg: "User left",
+    });
+
+    // Properly close the previous PeerConnection
+    if (remoteStreamRef.current) {
+      remoteStreamRef.current.srcObject = null;
+    }
+
+    // Reset Peer Connection (Important)
     initializePeerConnection();
+
+    // Get new local stream and set it to the peer connection
     await getLocalStream();
     setToggler(true);
     setFindinguser(true);
   };
 
+  const handleBtn = () => {
+    if (toggler) {
+      connectUser();
+      console.log("connected");
+      setToggler(false);
+      // setUserLeft(false);
+    } else {
+      handleDisconnection();
+    }
+  };
+
   return (
-    <Video
-      localStreamRef={localStreamRef}
-      remoteStreamRef={remoteStreamRef}
-      toggler={toggler}
-      remoteName={remoteName}
-      name={name}
-      handleBtn={connectUser}
-      setIsZoomed={setIsZoomed}
-      isZoomed={isZoomed}
-      findinguser={findinguser}
-      setVideo={setVideo}
-      setAudio={setAudio}
-      video={video}
-      audio={audio}
-      toggleVideoIcon={() => setVideo((prev) => !prev)}
-      toggleAudioIcon={() => setAudio((prev) => !prev)}
-    />
+    <>
+      <Video
+        localStreamRef={localStreamRef}
+        remoteStreamRef={remoteStreamRef}
+        toggler={toggler}
+        remoteName={remoteName}
+        name={name}
+        handleBtn={handleBtn}
+        setIsZoomed={setIsZoomed}
+        isZoomed={isZoomed}
+        findinguser={findinguser}
+        setVideo = {setVideo}
+        setAudio={setAudio}
+        video={video}
+        audio={audio}
+        toggleVideoIcon={toggleVideoIcon}
+        toggleAudioIcon={toggleAudioIcon}
+      />
+    </>
   );
 };
 
