@@ -2,13 +2,19 @@ import express from "express";
 import cors from "cors";
 import { Server } from "socket.io";
 import { createServer } from "http";
+import dotenv from "dotenv";
+dotenv.config()
+
+
+const PORT = process.env.PORT || 5000;
+const FRONTEND_URL = process.env.FRONTEND_URL || '*';
 
 const app = express();
 const server = createServer(app);
 
-app.use(cors({ origin: "*" }));
+app.use(cors({ origin: FRONTEND_URL }));
 
-const io = new Server(server, { cors: { origin: "*" } });
+const io = new Server(server, { cors: { origin: FRONTEND_URL } });
 
 const AvailableUsersQueue = []; // Queue for users waiting for a match
 const ConnectedUsers = new Map(); // Stores active connections
@@ -73,6 +79,6 @@ io.on("connection", (socket) => {
   });
 });
 
-server.listen(5000, () => {
+server.listen(PORT, () => {
   console.log("Server is running on port 5000");
 });
