@@ -7,13 +7,15 @@ const PeerProvider = ({ children }) => {
   const remoteStreamRef = useRef(null);
 
   const initializePeerConnection = () => {
-    if (peer.current) return; // Prevent reinitialization
+    if (peer.current) {
+      peer.current.close();
+    }
 
     peer.current = new RTCPeerConnection({
       iceServers: [
         { urls: "stun:stun.l.google.com:19302" }, 
         { urls: "stun:global.stun.twilio.com:3478" },
-        { urls: "stun:ss-turn1.xirsys.com" },  
+        { urls: "stun:ss-turn1.xirsys.com" },  // Xirsys STUN server
         { 
           urls: [
             "turn:ss-turn1.xirsys.com:80?transport=udp",
@@ -28,34 +30,32 @@ const PeerProvider = ({ children }) => {
         }
       ],
     });
+    
+    
 
     peer.current.ontrack = (event) => {
       if (!remoteStreamRef.current) {
         remoteStreamRef.current = new MediaStream();
       }
-
-      if (!remoteStreamRef.current.srcObject) {
-        remoteStreamRef.current.srcObject = new MediaStream();
-      }
-
-      const existingTracks = remoteStreamRef.current.srcObject.getTracks();
+    
+      // Ensure only remote tracks are added
       event.streams[0].getTracks().forEach((track) => {
+        if (!remoteStreamRef.current.srcObject) {
+          remoteStreamRef.current.srcObject = new MediaStream();
+        }
+    
+        // Check if track is already added to avoid duplicates
+        const existingTracks = remoteStreamRef.current.srcObject.getTracks();
         if (!existingTracks.includes(track)) {
           remoteStreamRef.current.srcObject.addTrack(track);
         }
       });
     };
-
-    peer.current.onicecandidate = (event) => {
-      if (event.candidate) {
-        console.log("ICE Candidate:", event.candidate);
-      }
-    };
   };
 
   useEffect(() => {
     initializePeerConnection();
-    
+
     return () => {
       if (peer.current) {
         peer.current.close();
@@ -87,12 +87,17 @@ const PeerProvider = ({ children }) => {
     await peer.current.setRemoteDescription(answer);
   };
 
-  const createIceCandidate = (callback) => {
-    peer.current.onicecandidate = (event) => {
-      if (event.candidate) {
-        callback(event.candidate);
-      }
-    };
+  const createIceCandidate = () => {
+    return new Promise((resolve) => {
+      const iceCandidates = [];
+      peer.current.onicecandidate = (event) => {
+        if (event.candidate) {
+          iceCandidates.push(event.candidate);
+        } else {
+          resolve(iceCandidates);
+        }
+      };
+    });
   };
 
   const receiveIceCandidate = async (iceCandidates) => {
