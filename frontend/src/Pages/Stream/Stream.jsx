@@ -114,18 +114,19 @@ const Stream = ({ setIsZoomed, isZoomed }) => {
 
   const connectUser = () => {
     socket.current.emit("AnyUser", [name, category]);
-    socket.current.on("myId", (id) => setMyId(id));
-    socket.current.off("finding_users").on("finding_users", console.log);
+  
+    socket.current.off("myId").on("myId", (id) => setMyId(id));
     socket.current.off("approach").on("approach", approach);
     socket.current.off("call").on("call", answerCall);
     socket.current.off("answerCall").on("answerCall", accept);
-    socket.current.on("connectionEnd", (msg) => {
+    socket.current.off("connectionEnd").on("connectionEnd", (msg) => {
       if (remoteStreamRef.current) {
         remoteStreamRef.current.srcObject = null;
-        handleDisconnection();
       }
+      handleDisconnection();
     });
   };
+  
 
   useEffect(() => {
     getLocalStream();
@@ -149,25 +150,33 @@ const Stream = ({ setIsZoomed, isZoomed }) => {
 
   const handleDisconnection = async () => {
     console.log("Disconnected");
-    // Notify the server about the disconnection
+  
     socket.current.emit("connectionEnd", {
       userLeftId: myId,
       msg: "User left",
     });
-
-    // Properly close the previous PeerConnection
-    if (remoteStreamRef.current) {
+  
+    if (remoteStreamRef.current && remoteStreamRef.current.srcObject) {
+      remoteStreamRef.current.srcObject.getTracks().forEach((track) => track.stop());
       remoteStreamRef.current.srcObject = null;
     }
-
-    // Reset Peer Connection (Important)
+  
+    if (localStream) {
+      localStream.getTracks().forEach((track) => track.stop());
+      setLocalStream(null);
+    }
+  
+    if (peer.current) {
+      peer.current.close();
+      peer.current = null;
+    }
+  
     initializePeerConnection();
-
-    // Get new local stream and set it to the peer connection
     await getLocalStream();
     setToggler(true);
     setFindinguser(true);
   };
+  
 
   const handleBtn = () => {
     if (toggler) {
