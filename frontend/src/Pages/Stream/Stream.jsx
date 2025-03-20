@@ -55,13 +55,13 @@ const Stream = ({ setIsZoomed, isZoomed }) => {
   const toggleVideoIcon = ()=>{
     const videoTrack = localStream.getVideoTracks()[0];
     videoTrack.enabled = !video;
-    console.log('video off')
+    console.log(video?'video off':'video on')
   }
 
   const toggleAudioIcon = ()=>{
     const audioTrack = localStream.getAudioTracks()[0];
     audioTrack.enabled = !audio;
-    console.log('audio off')
+    console.log(video?'audio off':'audio on')
   }
 
   const approach = async ([remoteName, remoteId, myId]) => {

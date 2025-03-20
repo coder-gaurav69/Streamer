@@ -88,8 +88,8 @@ const PeerProvider = ({ children }) => {
   };
 
   const createIceCandidate = () => {
-    // return new Promise((resolve) => {
-    //   const iceCandidates = [];
+    return new Promise((resolve) => {
+      const iceCandidates = [];
       peer.current.onicecandidate = (event) => {
         if (event.candidate) {
           iceCandidates.push(event.candidate);
@@ -97,16 +97,14 @@ const PeerProvider = ({ children }) => {
           resolve(iceCandidates);
         }
       };
-    // });
+    });
   };
 
   const receiveIceCandidate = async (iceCandidates) => {
-    // if (!iceCandidates?.length || !peer.current) return;
-    // await Promise.all(
-      // iceCandidates.map((candidate) => 
-        peer.current.addIceCandidate(new RTCIceCandidate(candidate))
-    // )
-    // );
+    if (!iceCandidates?.length || !peer.current) return;
+    await Promise.all(
+      iceCandidates.map((candidate) => peer.current.addIceCandidate(new RTCIceCandidate(candidate)))
+    );
   };
 
   return (
