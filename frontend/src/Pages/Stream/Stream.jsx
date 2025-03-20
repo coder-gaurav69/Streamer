@@ -31,22 +31,20 @@ const Stream = ({ setIsZoomed, isZoomed }) => {
 
   const getLocalStream = async () => {
     try {
-      if (localStream) return; // Prevent multiple calls
-  
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { frameRate: 30 },
+        video:{frameRate: 30},
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
-          autoGainControl: true,
+          autoGainControl: true, 
         },
       });
-  
+
       if (stream && localStreamRef.current) {
         localStreamRef.current.srcObject = stream;
-        localStreamRef.current.muted = true;
+        localStreamRef.current.muted = 'true';
         await addingTrack(stream);
-        setLocalStream(stream);
+        setLocalStream(stream)
       }
     } catch (error) {
       console.error("Error accessing media devices:", error);
@@ -131,7 +129,7 @@ const Stream = ({ setIsZoomed, isZoomed }) => {
 
   useEffect(() => {
     getLocalStream();
-  
+
     return () => {
       if (socket.current) {
         socket.current.off("finding_users");
@@ -140,8 +138,10 @@ const Stream = ({ setIsZoomed, isZoomed }) => {
         socket.current.off("answerCall");
         socket.current.off("connectionEnd");
       }
-      if (remoteStreamRef.current?.srcObject) {
-        remoteStreamRef.current.srcObject.getTracks().forEach((track) => track.stop());
+      if (remoteStreamRef.current && remoteStreamRef.current.srcObject) {
+        remoteStreamRef.current.srcObject
+          .getTracks()
+          .forEach((track) => track.stop());
         remoteStreamRef.current.srcObject = null;
       }
     };
@@ -149,14 +149,22 @@ const Stream = ({ setIsZoomed, isZoomed }) => {
 
   const handleDisconnection = async () => {
     console.log("Disconnected");
-    socket.current.emit("connectionEnd", { userLeftId: myId, msg: "User left" });
-  
+    // Notify the server about the disconnection
+    socket.current.emit("connectionEnd", {
+      userLeftId: myId,
+      msg: "User left",
+    });
+
+    // Properly close the previous PeerConnection
     if (remoteStreamRef.current) {
       remoteStreamRef.current.srcObject = null;
     }
-  
-    initializePeerConnection(); // Ensure this is only called when needed
-    await getLocalStream(); // Prevent unnecessary multiple calls
+
+    // Reset Peer Connection (Important)
+    initializePeerConnection();
+
+    // Get new local stream and set it to the peer connection
+    await getLocalStream();
     setToggler(true);
     setFindinguser(true);
   };
