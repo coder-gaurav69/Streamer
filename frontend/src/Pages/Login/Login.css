@@ -1,0 +1,276 @@
+.formChildDiv {
+  width:80%;
+  min-height: fit-content;
+  backdrop-filter: blur(2px);
+  background-color: rgba(255, 255, 255, 0.7);
+  border-radius: 10px;
+  padding: 10px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  box-shadow: 2px 2px 10px rgba(255, 255, 255, 0.7),
+    inset 2px 2px 10px rgba(255, 255, 255, 0.7);
+}
+
+.formChildDiv > .logo {
+  color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2%;
+}
+
+.formChildDiv > .logo > a {
+  text-decoration: none;
+  /* color: rgba(0, 0, 0, 0.6); */
+}
+
+.formChildDiv .firstChild {
+  background-color: rgba(255, 255, 255, 0.4);
+  border-radius: 5px;
+  display: flex;
+  padding: 5px;
+}
+
+.formChildDiv .firstChild > div {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-basis: 50%;
+  padding: 5px;
+  border-radius: 5px;
+  cursor: pointer;
+  color: rgba(0, 0, 0, 0.8);
+}
+
+.formChildDiv .secondChild {
+  width:100%;
+  background-color: rgba(255, 255, 255, 0.5);
+  padding: 10px 20px;
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  border-radius: 5px;
+  gap:5px;
+}
+
+.formChildDiv > .secondChild > h2 {
+  color: rgba(0, 0, 0, 0.8);
+  padding: 2%;
+}
+.formChildDiv > .secondChild > h4 {
+  color: rgba(0, 0, 0, 0.4);
+  padding: 2%;
+  height:50px;
+}
+
+.secondChild > .fullName,
+.secondChild > .emailDiv,
+.secondChild > .passwordDiv {
+  display: flex;
+  flex-direction: column;
+  text-align: start;
+  width:100%;
+}
+
+.secondChild > .fullName > label,
+.secondChild > .emailDiv > label {
+  padding: 2%;
+  width: 100%;
+}
+
+.secondChild > .fullName > .name,
+.secondChild > .emailDiv > .email,
+.secondChild > .passwordDiv > .passwordDivchild2 > input {
+  padding: 3%;
+  border-radius: 10px;
+  outline: none;
+  border: none;
+  width:100%;
+}
+
+.secondChild > .passwordDiv > .passwordDivchild1 {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2%;
+}
+
+.secondChild > .passwordDiv > .passwordDivchild2 {
+  display: flex;
+  position: relative;
+  align-items: center;
+}
+
+.secondChild > .passwordDiv > .passwordDivchild2 > i {
+  position: absolute;
+  right: 10px;
+}
+
+.secondChild > .btnDiv {
+  display: flex;
+  flex-grow: 1;
+  align-items: center;
+  justify-content: center;
+  padding: 2% 0;
+}
+
+.secondChild > .btnDiv > button {
+  padding: 3% 8%;
+  width: 100%;
+  border-radius: 10px;
+  color: white;
+  background-color: rgba(0, 0, 0, 1);
+  border: none;
+  font-weight: bold;
+}
+
+.formChildDiv .thirdChild {
+  background-color: rgba(255, 255, 255, 0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 5%;
+  padding: 10px;
+  border-radius: 0 0 20px 20px;
+}
+
+.formChildDiv .thirdChild > .thirdChild-1 {
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+  align-items: center;
+  padding: 1%;
+}
+
+.formChildDiv .thirdChild > .thirdChild-1 > hr {
+  border-color: rgba(0, 0, 0, 0.2);
+  flex-grow: 1;
+}
+
+.formChildDiv .thirdChild > .thirdChild-1 > h3 {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.formChildDiv > .thirdChild > .thirdChild-2 {
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+  padding: 1%;
+}
+
+.formChildDiv > .thirdChild > .thirdChild-2 > div {
+  width: 25%;
+  height: 40px;
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius:10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  transition: 0.5s;
+}
+
+.formChildDiv > .thirdChild > .thirdChild-2 > div > a {
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.formChildDiv > .thirdChild > .thirdChild-2 > div:hover{
+  transform: scale(1.2);
+}
+
+.formChildDiv > .thirdChild > .thirdChild-2 > div:nth-child(1):hover > a {
+  color: #0F9D58;
+}
+.formChildDiv > .thirdChild > .thirdChild-2 > div:nth-child(2):hover > a {
+  color:#1877F2;
+}
+.formChildDiv > .thirdChild > .thirdChild-2 > div:nth-child(3):hover > a {
+  color: #657786;
+}
+
+
+/* media query */
+@media screen and (max-width: 950px) {
+  .dark {
+    width: 55% !important;
+  }
+  .loginDiv {
+    width: 45% !important;
+  }
+}
+@media screen and (max-width: 850px) {
+  .dark {
+    width: 53% !important;
+  }
+  .loginDiv {
+    width: 48% !important;
+  }
+}
+@media screen and (max-width: 700px) {
+  .dark {
+    display: none !important;
+  }
+  .loginDiv {
+    width: 500px !important;
+  }
+}
+
+@media screen and (max-width: 400px) {
+
+    .formChildDiv{
+        width:100%;
+    }
+  .formChildDiv {
+    padding: 10px 15px;
+  }
+
+  .formChildDiv .secondChild {
+    padding: 10px 5px;
+    align-items: center;
+    gap:10px;
+  }
+
+  .secondChild > .fullName, .secondChild > .emailDiv, .secondChild > .passwordDiv{
+    align-items: center;
+  }
+
+  .secondChild > .fullName > label, .secondChild > .emailDiv > label{
+    width:90%;
+  }
+
+  .secondChild > .fullName > .name, .secondChild > .emailDiv > .email, .secondChild > .passwordDiv > .passwordDivchild2 > input {
+    width: 90%;
+  }
+
+  .secondChild > .passwordDiv > .passwordDivchild1{
+    width:90%;
+  }
+  
+  .secondChild > .passwordDiv>.passwordDivchild2{
+    justify-content: center;
+  }
+  .secondChild > .passwordDiv>.passwordDivchild2>i{
+    right:20px;
+  }
+
+  .secondChild > .passwordDiv > .passwordDivchild2{
+    width:100%;
+  }
+
+  .secondChild > .btnDiv {
+    width: 90%;
+  }
+  .secondChild > .btnDiv>button {
+    width: 100%;
+    padding:5%;
+  }
+
+  .loginDiv {
+    width: 500px !important;
+  }
+
+  
+
+
+  
+}
