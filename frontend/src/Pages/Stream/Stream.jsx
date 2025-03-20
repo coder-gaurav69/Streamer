@@ -28,9 +28,10 @@ const Stream = ({ setIsZoomed, isZoomed }) => {
   const [audio, setAudio] = useState(true);
   const [video, setVideo] = useState(true);
   const [findingUser, setFindingUser] = useState(true);
-  const [connected, setConnected] = useState(false); // Prevents multiple connections
+  const [connected, setConnected] = useState(false);
+  const [disconnecting, setDisconnecting] = useState(false); // Prevents multiple disconnections
 
-  // 🔹 Get User Media
+  // 🔹 Get Local Stream
   const getLocalStream = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -100,23 +101,27 @@ const Stream = ({ setIsZoomed, isZoomed }) => {
     setFindingUser(false);
   };
 
-  // 🔹 Connect with a user
+  // 🔹 Connect with a user (Ensuring no duplicate listeners)
   const connectUser = () => {
     if (connected) return; // Prevent multiple connections
     setConnected(true);
 
     socket.current.emit("AnyUser", [name, category]);
-    socket.current.on("myId", (id) => setMyId(id));
+
+    // ✅ Remove existing listeners before adding new ones
+    socket.current.off("myId").on("myId", (id) => setMyId(id));
     socket.current.off("finding_users").on("finding_users", console.log);
     socket.current.off("approach").on("approach", approach);
     socket.current.off("call").on("call", answerCall);
     socket.current.off("answerCall").on("answerCall", accept);
-    socket.current.on("connectionEnd", handleDisconnection);
+    socket.current.off("connectionEnd").on("connectionEnd", handleDisconnection);
   };
 
-  // 🔹 Disconnect user properly
+  // 🔹 Disconnect user properly (Preventing multiple calls)
   const handleDisconnection = async () => {
-    console.log("Disconnected");
+    if (disconnecting) return; // Prevent multiple disconnections
+    setDisconnecting(true);
+    console.log("🔴 Disconnected");
 
     socket.current.emit("connectionEnd", {
       userLeftId: myId,
@@ -133,13 +138,16 @@ const Stream = ({ setIsZoomed, isZoomed }) => {
     setToggler(true);
     setFindingUser(true);
     setConnected(false);
+
+    // Reset disconnecting state after process completes
+    setTimeout(() => setDisconnecting(false), 1000);
   };
 
   // 🔹 Handle Connection Button
   const handleBtn = () => {
     if (toggler) {
       connectUser();
-      console.log("Connected");
+      console.log("✅ Connected");
       setToggler(false);
     } else {
       handleDisconnection();
