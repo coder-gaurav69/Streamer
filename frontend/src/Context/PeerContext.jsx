@@ -102,20 +102,30 @@ const PeerProvider = ({ children }) => {
   };
 
   const receiveIceCandidate = async () => {
-    if (peer.current && peer.current.remoteDescription) {
-      try {
-        for (const candidate of iceCandidate) {
-          if (candidate) {
-            await peer.current.addIceCandidate(new RTCIceCandidate(candidate));
+    if (peer.current) {
+      // Wait until remote description is set before adding ICE candidates
+      const checkRemoteDescription = setInterval(async () => {
+        if (peer.current.remoteDescription) {
+          clearInterval(checkRemoteDescription); // Stop checking once it's set
+  
+          try {
+            for (const candidate of iceCandidate) {
+              if (candidate) {
+                await peer.current.addIceCandidate(new RTCIceCandidate(candidate));
+              }
+            }
+          } catch (error) {
+            console.error("Error adding ICE Candidate:", error);
           }
+        } else {
+          console.warn("Waiting for remote description before adding ICE candidates...");
         }
-      } catch (error) {
-        console.error("Error adding ICE Candidate:", error);
-      }
+      }, 500); // Check every 500ms
     } else {
-      console.warn("Skipping ICE Candidate: Remote description not set yet.");
+      console.warn("Peer connection not established yet.");
     }
   };
+  
   
 
   // ✅ This ensures dynamic updates without re-processing
