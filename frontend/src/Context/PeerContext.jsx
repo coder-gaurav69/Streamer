@@ -90,6 +90,7 @@ const PeerProvider = ({ children }) => {
   const createIceCandidate = () => {
     peer.current.onicecandidate = (event) => {
         if (event.candidate) {
+            console.log('mil gaya')
             setIceCandidate(prevCandidates => [...prevCandidates, event.candidate]); 
         }
     };
@@ -98,7 +99,7 @@ const PeerProvider = ({ children }) => {
   const receiveIceCandidate = async () => {
     if (peer.current) {
       try {
-        await peer.current.addIceCandidate(new RTCIceCandidate(candidate));
+        await peer.current.addIceCandidate(new RTCIceCandidate(iceCandidate));
       } catch (error) {
         console.error("Error adding ICE Candidate:", error);
       }
