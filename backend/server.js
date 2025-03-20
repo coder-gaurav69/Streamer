@@ -3,21 +3,32 @@ import cors from "cors";
 import { Server } from "socket.io";
 import { createServer } from "http";
 import dotenv from "dotenv";
-dotenv.config()
 
+dotenv.config();
 
 const PORT = process.env.PORT || 5000;
-const FRONTEND_URL = process.env.FRONTEND_URL || '*';
+const FRONTEND_URL = process.env.FRONTEND_URL || "https://streamer123.netlify.app";
 
 const app = express();
 const server = createServer(app);
 
-app.use(cors({ origin: FRONTEND_URL }));
+app.use(
+  cors({
+    origin: FRONTEND_URL,
+    methods: ["GET", "POST"],
+    credentials: true,
+  })
+);
 
-const io = new Server(server, { cors: { origin: FRONTEND_URL } });
+const io = new Server(server, {
+  cors: {
+    origin: FRONTEND_URL,
+    methods: ["GET", "POST"],
+  },
+});
 
-const AvailableUsersQueue = []; // Queue for users waiting for a match
-const ConnectedUsers = new Map(); // Stores active connections
+const AvailableUsersQueue = [];
+const ConnectedUsers = new Map();
 
 const matchUsers = () => {
   while (AvailableUsersQueue.length >= 2) {
@@ -33,11 +44,14 @@ const matchUsers = () => {
 };
 
 io.on("connection", (socket) => {
+  console.log(`User connected: ${socket.id}`);
+
   socket.on("AnyUser", (data) => {
     const [name] = data;
-    console.log(name)
+    console.log("New user:", name);
+
     socket.emit("myId", socket.id);
-    
+
     if (name) {
       AvailableUsersQueue.push({ id: socket.id, name });
       matchUsers();
@@ -45,41 +59,40 @@ io.on("connection", (socket) => {
   });
 
   socket.on("call", ([name, offervalue, myId, remoteId]) => {
-    socket.to(remoteId).emit("call",data);
-});
+    io.to(remoteId).emit("call", [name, offervalue, myId, remoteId]);
+  });
 
-socket.on("answerCall", ([name, answer, remoteId,myId]) => {
-    socket.to(remoteId).emit("answerCall", data);
-});
+  socket.on("answerCall", ([name, answer, remoteId, myId]) => {
+    io.to(remoteId).emit("answerCall", [name, answer, remoteId, myId]);
+  });
 
-
-
-  
-  socket.on("connectionEnd", (data) => {
-    const { userLeftId } = data;
+  socket.on("connectionEnd", ({ userLeftId }) => {
     const remoteId = ConnectedUsers.get(userLeftId);
 
     if (remoteId) {
-      socket.to(remoteId).emit("connectionEnd", "User left",);
+      io.to(remoteId).emit("connectionEnd", "User left");
       ConnectedUsers.delete(userLeftId);
       ConnectedUsers.delete(remoteId);
     }
   });
 
   socket.on("disconnect", () => {
+    console.log(`User disconnected: ${socket.id}`);
+
     const remoteId = ConnectedUsers.get(socket.id);
     if (remoteId) {
-      socket.to(remoteId).emit("connectionEnd", "User left");
+      io.to(remoteId).emit("connectionEnd", "User left");
       ConnectedUsers.delete(socket.id);
       ConnectedUsers.delete(remoteId);
     }
-    AvailableUsersQueue.splice(
-      AvailableUsersQueue.findIndex((user) => user.id === socket.id),
-      1
-    );
+
+    const index = AvailableUsersQueue.findIndex((user) => user.id === socket.id);
+    if (index !== -1) {
+      AvailableUsersQueue.splice(index, 1);
+    }
   });
 });
 
 server.listen(PORT, () => {
-  console.log("Server is running on port 5000");
+  console.log(`Server is running on port ${PORT}`);
 });
