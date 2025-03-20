@@ -102,27 +102,21 @@ const PeerProvider = ({ children }) => {
   };
 
   const receiveIceCandidate = async () => {
-    if (peer.current && iceCandidate.length > 0) {
+    if (peer.current && peer.current.remoteDescription) {
       try {
-        const newCandidates = iceCandidate.filter(
-          (candidate) => !processedCandidates.includes(candidate)
-        );
-
-        for (const candidate of newCandidates) {
+        for (const candidate of iceCandidate) {
           if (candidate) {
             await peer.current.addIceCandidate(new RTCIceCandidate(candidate));
           }
         }
-
-        // ✅ Mark these candidates as processed
-        setProcessedCandidates((prev) => [...prev, ...newCandidates]);
       } catch (error) {
         console.error("Error adding ICE Candidate:", error);
       }
     } else {
-      console.warn("No new ICE Candidates available to add.");
+      console.warn("Skipping ICE Candidate: Remote description not set yet.");
     }
   };
+  
 
   // ✅ This ensures dynamic updates without re-processing
   useEffect(() => {
