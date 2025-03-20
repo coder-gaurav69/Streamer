@@ -15,7 +15,7 @@ const PeerProvider = ({ children }) => {
       iceServers: [
         { urls: "stun:stun.l.google.com:19302" }, 
         { urls: "stun:global.stun.twilio.com:3478" },
-        { urls: "stun:ss-turn1.xirsys.com" }, 
+        { urls: "stun:ss-turn1.xirsys.com" },  // Xirsys STUN server
         { 
           urls: [
             "turn:ss-turn1.xirsys.com:80?transport=udp",
@@ -30,27 +30,26 @@ const PeerProvider = ({ children }) => {
         }
       ],
     });
+    
+    
 
     peer.current.ontrack = (event) => {
       if (!remoteStreamRef.current) {
         remoteStreamRef.current = new MediaStream();
       }
-
+    
+      // Ensure only remote tracks are added
       event.streams[0].getTracks().forEach((track) => {
         if (!remoteStreamRef.current.srcObject) {
           remoteStreamRef.current.srcObject = new MediaStream();
         }
+    
+        // Check if track is already added to avoid duplicates
         const existingTracks = remoteStreamRef.current.srcObject.getTracks();
         if (!existingTracks.includes(track)) {
           remoteStreamRef.current.srcObject.addTrack(track);
         }
       });
-    };
-
-    peer.current.onicecandidate = (event) => {
-      if (event.candidate) {
-        socket.current.emit("iceCandidate", event.candidate);
-      }
     };
   };
 
@@ -88,6 +87,26 @@ const PeerProvider = ({ children }) => {
     await peer.current.setRemoteDescription(answer);
   };
 
+  const createIceCandidate = () => {
+    return new Promise((resolve) => {
+      const iceCandidates = [];
+      peer.current.onicecandidate = (event) => {
+        if (event.candidate) {
+          iceCandidates.push(event.candidate);
+        } else {
+          resolve(iceCandidates);
+        }
+      };
+    });
+  };
+
+  const receiveIceCandidate = async (iceCandidates) => {
+    if (!iceCandidates?.length || !peer.current) return;
+    await Promise.all(
+      iceCandidates.map((candidate) => peer.current.addIceCandidate(new RTCIceCandidate(candidate)))
+    );
+  };
+
   return (
     <PeerContext.Provider
       value={{
@@ -96,8 +115,10 @@ const PeerProvider = ({ children }) => {
         offer,
         answer,
         acceptingAnswer,
+        createIceCandidate,
+        receiveIceCandidate,
         remoteStreamRef,
-        initializePeerConnection,
+        initializePeerConnection, 
       }}
     >
       {children}
