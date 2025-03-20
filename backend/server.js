@@ -3,11 +3,11 @@ import cors from "cors";
 import { Server } from "socket.io";
 import { createServer } from "http";
 import dotenv from "dotenv";
+dotenv.config()
 
-dotenv.config();
 
 const PORT = process.env.PORT || 5000;
-const FRONTEND_URL = process.env.FRONTEND_URL || "*";
+const FRONTEND_URL = process.env.FRONTEND_URL || '*';
 
 const app = express();
 const server = createServer(app);
@@ -35,9 +35,9 @@ const matchUsers = () => {
 io.on("connection", (socket) => {
   socket.on("AnyUser", (data) => {
     const [name] = data;
-    console.log(`${name} connected with ID: ${socket.id}`);
+    console.log(name)
     socket.emit("myId", socket.id);
-
+    
     if (name) {
       AvailableUsersQueue.push({ id: socket.id, name });
       matchUsers();
@@ -45,51 +45,42 @@ io.on("connection", (socket) => {
   });
 
   socket.on("call", (data) => {
-    const [name, offervalue, myId, remoteId] = data;
-    console.log(`Call from ${myId} to ${remoteId}`);
+    const [, offervalue, iceCandidate, , remoteId] = data;
     socket.to(remoteId).emit("call", data);
   });
 
-  socket.on("ice-candidate", (data) => {
-    const [candidate, remoteName, remoteId, myId] = data;
-    if (candidate) {
-      console.log(`ICE Candidate sent from ${myId} to ${remoteId}`);
-      socket.to(remoteId).emit("receiveCandidate", data); // Send full array
-    }
-  });
-
   socket.on("answerCall", (data) => {
-    const [, answer, remoteId, myId] = data;
-    console.log(`Answer sent from ${myId} to ${remoteId}`);
+    const [, answer, iceCandidate, remoteId] = data;
     socket.to(remoteId).emit("answerCall", data);
   });
 
-  socket.on("connectionEnd", ({ userLeftId }) => {
+
+  
+  socket.on("connectionEnd", (data) => {
+    const { userLeftId } = data;
     const remoteId = ConnectedUsers.get(userLeftId);
-    console.log(`User ${userLeftId} left, informing ${remoteId}`);
 
     if (remoteId) {
-      socket.to(remoteId).emit("connectionEnd", "User left");
+      socket.to(remoteId).emit("connectionEnd", "User left",);
       ConnectedUsers.delete(userLeftId);
       ConnectedUsers.delete(remoteId);
     }
   });
 
   socket.on("disconnect", () => {
-    console.log(`User ${socket.id} disconnected`);
     const remoteId = ConnectedUsers.get(socket.id);
     if (remoteId) {
       socket.to(remoteId).emit("connectionEnd", "User left");
       ConnectedUsers.delete(socket.id);
       ConnectedUsers.delete(remoteId);
     }
-
-    AvailableUsersQueue = AvailableUsersQueue.filter(
-      (user) => user.id !== socket.id
+    AvailableUsersQueue.splice(
+      AvailableUsersQueue.findIndex((user) => user.id === socket.id),
+      1
     );
   });
 });
 
 server.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  console.log("Server is running on port 5000");
 });

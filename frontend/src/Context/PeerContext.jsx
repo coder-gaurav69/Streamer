@@ -1,12 +1,10 @@
 import React, { createContext, useEffect, useRef } from "react";
-import { SocketContext } from "../../Context/SocketContext";
 
 const PeerContext = createContext(null);
 
 const PeerProvider = ({ children }) => {
   const peer = useRef(null);
   const remoteStreamRef = useRef(null);
-  const socket = useContext(SocketContext);
 
   const initializePeerConnection = () => {
     if (peer.current) {
@@ -88,32 +86,24 @@ const PeerProvider = ({ children }) => {
     await peer.current.setRemoteDescription(answer);
   };
 
-  const createIceCandidate = (remoteName,remoteId,myId) => {
+  const createIceCandidate = () => {
     peer.current.onicecandidate = (event) => {
       if (event.candidate) {
-        console.log("Sending ICE candidate:", event.candidate);
-        socket.current.emit("ice-candidate", [event.candidate,remoteName,remoteId,myId]);
+        return event.candidate
       }
-    };
+    }
   };
   
-  
-  const receiveIceCandidate = () => {
-    socket.current.on("receiveCandidate", async (data) => {
-      const [candidate, myName, myId, remoteId] = data;
-  
-      if (candidate && peer.current) {
-        try {
-          await peer.current.addIceCandidate(new RTCIceCandidate(candidate));
-          console.log("ICE Candidate added:", candidate);
-        } catch (error) {
-          console.error("Error adding ICE Candidate:", error);
-        }
+
+  const receiveIceCandidate = async (candidate) => {
+    if (candidate && peer.current) {
+      try {
+        await peer.current.addIceCandidate(new RTCIceCandidate(candidate));
+      } catch (error) {
+        console.error("Error adding ICE Candidate:", error);
       }
-    });
+    }
   };
-  
-  
   
 
   return (
