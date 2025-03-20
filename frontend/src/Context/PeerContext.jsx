@@ -96,15 +96,22 @@ const PeerProvider = ({ children }) => {
     };
 };
 
-  const receiveIceCandidate = async () => {
-    if (peer.current) {
-      try {
-        await peer.current.addIceCandidate(new RTCIceCandidate(iceCandidate));
-      } catch (error) {
-        console.error("Error adding ICE Candidate:", error);
+const receiveIceCandidate = async () => {
+  if (peer.current && iceCandidate.length > 0) {
+    try {
+      for (const candidate of iceCandidate) {
+        if (candidate) {
+          await peer.current.addIceCandidate(new RTCIceCandidate(candidate));
+        }
       }
+    } catch (error) {
+      console.error("Error adding ICE Candidate:", error);
     }
-  };
+  } else {
+    console.warn("No ICE Candidates available to add.");
+  }
+};
+
 
   useEffect(()=>{
     receiveIceCandidate()
