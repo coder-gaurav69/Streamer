@@ -67,6 +67,7 @@ const PeerProvider = ({ children }) => {
   const offer = async () => {
     const offer = await peer.current.createOffer();
     await peer.current.setLocalDescription(offer);
+    console.log('first step')
     return offer;
   };
 
@@ -74,6 +75,7 @@ const PeerProvider = ({ children }) => {
     await peer.current.setRemoteDescription(offer);
     const answer = await peer.current.createAnswer();
     await peer.current.setLocalDescription(answer);
+    console.log('second step')
     return answer;
   };
 
@@ -84,6 +86,7 @@ const PeerProvider = ({ children }) => {
   };
 
   const acceptingAnswer = async (answer) => {
+    console.log('last step')
     await peer.current.setRemoteDescription(answer);
   };
 
