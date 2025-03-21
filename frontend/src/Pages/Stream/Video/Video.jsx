@@ -42,7 +42,9 @@ const Video = ({
   const chatEndRef = useRef(null);
   const [screenSize, setScreenSize] = useState(window.innerWidth);
   // const [toggleStream, setToggleStream] = useState(false);
-  const [forceRender, setForceRender] = useState(false);
+  // const [forceRender, setForceRender] = useState(false);
+  const [bigScreen,setBigScreen] = useState(null)
+  const [smallScreen,setSmallScreen] = useState(null)
 
   const Zoomed = () => {
     setIsZoomed(!isZoomed);
@@ -195,12 +197,18 @@ const Video = ({
     });
   }, []);
 
+  useEffect(()=>{
+    if(!localStreamRef.current || !remoteStreamRef.current) return
+    setBigScreen(remoteStreamRef.current)
+    setSmallScreen(localStreamRef.current)
+  },[])
+
   const toggleStream = () => {
     if (!remoteStreamRef || !localStreamRef) return;
     const tempStream = localStreamRef.current;
-    localStreamRef.current = remoteStreamRef.current;
-    remoteStreamRef.current = tempStream;
-    setForceRender(!forceRender);
+    setSmallScreen(remoteStreamRef.current);
+    setBigScreen(tempStream);
+    // setForceRender(!forceRender);
     console.log("update hua");
   };
 
@@ -286,7 +294,7 @@ const Video = ({
           >
             <video
               className="remoteStream"
-              ref={remoteStreamRef}
+              ref={bigScreen}
               autoPlay
               playsInline
             ></video>
@@ -305,7 +313,7 @@ const Video = ({
             >
               <video
                 className="localStream"
-                ref={localStreamRef}
+                ref={smallScreen}
                 autoPlay
                 playsInline
                 style={{
