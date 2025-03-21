@@ -1,11 +1,13 @@
 import React, { createContext, useEffect, useRef, useState } from "react";
+import { SocketContext } from "../../Context/SocketContext";
 
 const PeerContext = createContext(null);
 
 const PeerProvider = ({ children }) => {
   const peer = useRef(null);
   const remoteStreamRef = useRef(null);
-  const [iceCandidate, setIceCandidate] = useState([]);
+  // const [iceCandidate, setIceCandidate] = useState([]);
+  const socket = useContext(SocketContext);
 
   const initializePeerConnection = () => {
     if (peer.current) {
@@ -92,7 +94,7 @@ const PeerProvider = ({ children }) => {
 
   const [processedCandidates, setProcessedCandidates] = useState([]);
 
-  const createIceCandidate = () => {
+  const createIceCandidate = (remoteId) => {
   peer.current.onicecandidate = (event) => {
     if (event.candidate) {
       socket.current.emit("ice-candidate", { candidate: event.candidate, remoteId });
