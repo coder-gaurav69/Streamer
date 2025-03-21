@@ -199,6 +199,7 @@ const Video = ({
 
   useEffect(()=>{
     if(!remoteStreamRef.current || !localStreamRef.current) return;
+    console.log('hello');
     setSmallStream(toggleStream ? remoteStreamRef.current : localStreamRef.current)
     setBigStream(toggleStream ? localStreamRef.current : remoteStreamRef.current)
   },[toggleStream])
