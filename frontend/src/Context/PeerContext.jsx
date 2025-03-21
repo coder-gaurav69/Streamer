@@ -1,11 +1,19 @@
-import React, { createContext, useEffect, useRef, useState } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import { SocketContext } from "./SocketContext";
 
 const PeerContext = createContext(null);
 
 const PeerProvider = ({ children }) => {
   const peer = useRef(null);
   const remoteStreamRef = useRef(null);
-  const [iceCandidate, setIceCandidate] = useState([]);
+  const socket = useContext(SocketContext);
+  // const [iceCandidate, setIceCandidate] = useState([]);
 
   const initializePeerConnection = () => {
     if (peer.current) {
@@ -92,37 +100,46 @@ const PeerProvider = ({ children }) => {
 
   const [processedCandidates, setProcessedCandidates] = useState([]);
 
-  const createIceCandidate = () => {
+  const createIceCandidate = (remoteId) => {
     peer.current.onicecandidate = (event) => {
       if (event.candidate) {
-        // console.log(event.candidate);
-        setIceCandidate((prevCandidates) => [
-          ...prevCandidates,
-          event.candidate,
-        ]);
+        socket.current.emit("iceCandidate", [event.candidate, remoteId]);
       }
     };
   };
 
-  const receiveIceCandidate = async () => {
-    for (const candidate of iceCandidate) {
-      if (candidate) {
-        await peer.current.addIceCandidate(new RTCIceCandidate(candidate));
-      }
-    }
-  };
+  // useEffect(() => {
+  //   if(socket.current){
+  //     socket.current.on("receiveCandidate", async (candidate) => {
+  //       if (peer.current && peer.current.remoteDescription) {
+  //         try {
+  //           await peer.current.addIceCandidate(candidate);
+  //           console.log('connect hogya')
+  //         } catch (error) {
+  //           console.error("Error adding received ICE candidate:", error);
+  //         }
+  //       }
+  //     });
+  //   }
+  // }, []);
 
-  // ✅ This ensures dynamic updates without re-processing
-  useEffect(() => {
-    if(peer.current.remoteDescription){
-      receiveIceCandidate();
-    }
-  }, [iceCandidate]);
+  const receiveIceCandidate = () => {
+    socket.current.on("receiveCandidate", async (candidate) => {
+      // if (peer.current && peer.current.remoteDescription) {
+        try {
+          await peer.current.addIceCandidate(candidate);
+          console.log("connect hogya");
+        } catch (error) {
+          console.error("Error adding received ICE candidate:", error);
+        }
+      // }
+    });
+  };
 
   return (
     <PeerContext.Provider
       value={{
-        peer,
+        // peer,
         addingTrack,
         offer,
         answer,

@@ -3,11 +3,11 @@ import cors from "cors";
 import { Server } from "socket.io";
 import { createServer } from "http";
 import dotenv from "dotenv";
-dotenv.config()
-
+dotenv.config();
 
 const PORT = process.env.PORT || 5000;
 const FRONTEND_URL = process.env.FRONTEND_URL || '*';
+// const FRONTEND_URL = "http://localhost:5173";
 
 const app = express();
 const server = createServer(app);
@@ -35,9 +35,9 @@ const matchUsers = () => {
 io.on("connection", (socket) => {
   socket.on("AnyUser", (data) => {
     const [name] = data;
-    console.log(name)
+    console.log(name);
     socket.emit("myId", socket.id);
-    
+
     if (name) {
       AvailableUsersQueue.push({ id: socket.id, name });
       matchUsers();
@@ -45,21 +45,29 @@ io.on("connection", (socket) => {
   });
 
   socket.on("call", (data) => {
-    const [, offervalue, iceCandidate, , remoteId] = data;
+    const [name, offervalue, myId, remoteId] = data;
     socket.to(remoteId).emit("call", data);
   });
 
   socket.on("answerCall", (data) => {
-    const [, answer, iceCandidate, remoteId] = data;
+    const [name,
+      createdAnswer,
+      remoteId,
+      myId,] = data;
     socket.to(remoteId).emit("answerCall", data);
   });
+
+  socket.on('iceCandidate',(data)=>{
+    const [candidate,remoteId] = data;
+    socket.to(remoteId).emit('receiveCandidate',candidate)
+  })
 
 
   socket.on("connectionEnd", ({ userLeftId }) => {
     const remoteId = ConnectedUsers.get(userLeftId);
 
     if (remoteId) {
-      socket.to(remoteId).emit("connectionEnd", "User left",);
+      socket.to(remoteId).emit("connectionEnd", "User left");
       ConnectedUsers.delete(userLeftId);
       ConnectedUsers.delete(remoteId);
     }

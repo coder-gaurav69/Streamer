@@ -67,12 +67,12 @@ const Stream = ({ setIsZoomed, isZoomed }) => {
   const approach = async ([remoteName, remoteId, myId]) => {
     setRemoteId(remoteId);
     setRemoteName(remoteName);
+    createIceCandidate(remoteId);
     const offervalue = await offer();
-    const iceCandidate = createIceCandidate();
     socket.current.emit("call", [
       name,
       offervalue,
-      iceCandidate,
+      // iceCandidate,
       myId,
       remoteId,
     ]);
@@ -81,18 +81,18 @@ const Stream = ({ setIsZoomed, isZoomed }) => {
   const answerCall = async ([
     remoteName,
     offer,
-    remoteIceCandidate,
+    // remoteIceCandidate,
     remoteId,
     myId,
   ]) => {
     setRemoteName(remoteName);
+    createIceCandidate(remoteId);
     const createdAnswer = await answer(offer);
-    await receiveIceCandidate(remoteIceCandidate);
-    const iceCandidate = createIceCandidate();
+    receiveIceCandidate();
     socket.current.emit("answerCall", [
       name,
       createdAnswer,
-      iceCandidate,
+      // iceCandidate,
       remoteId,
       myId,
     ]);
@@ -102,12 +102,12 @@ const Stream = ({ setIsZoomed, isZoomed }) => {
   const accept = async ([
     remoteName,
     answer,
-    remoteIceCandidate,
+    // remoteIceCandidate,
     myId,
     remoteId,
   ]) => {
     await acceptingAnswer(answer);
-    await receiveIceCandidate(remoteIceCandidate);
+    receiveIceCandidate();
     socket.current.emit("connectionEstablished", [myId, remoteId]);
     setFindinguser(false);
   };

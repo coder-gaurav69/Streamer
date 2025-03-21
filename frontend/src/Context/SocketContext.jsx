@@ -9,6 +9,7 @@ const SocketProvider = ({ children }) => {
     const socket = useRef(null)
     useEffect(()=>{
       socket.current = io(import.meta.env.VITE_BACKEND_URL)
+      // socket.current = io('http://localhost:5000')
     },[])
 
   return (
