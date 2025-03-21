@@ -67,9 +67,9 @@ const Stream = ({ setIsZoomed, isZoomed }) => {
   const approach = async ([remoteName, remoteId, myId]) => {
     setRemoteId(remoteId);
     setRemoteName(remoteName);
+    createIceCandidate();
     const offervalue = await offer();
     console.log(offervalue)
-    createIceCandidate();
     socket.current.emit("call", [
       name,
       offervalue,
@@ -86,10 +86,10 @@ const Stream = ({ setIsZoomed, isZoomed }) => {
     myId
   ]) => {
     setRemoteName(remoteName);
+    createIceCandidate();
     const createdAnswer = await answer(offer);
     console.log(createdAnswer)
     receiveIceCandidate();
-    createIceCandidate();
     socket.current.emit("answerCall", [
       name,
       createdAnswer,
