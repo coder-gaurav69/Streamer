@@ -17,6 +17,8 @@ const Stream = ({ setIsZoomed, isZoomed }) => {
     receiveIceCandidate,
     remoteStreamRef,
     initializePeerConnection,
+    setRemoteStream,
+    remoteStream,
   } = useContext(PeerContext);
 
   const localStreamRef = useRef(null);
@@ -177,6 +179,10 @@ const Stream = ({ setIsZoomed, isZoomed }) => {
       <Video
         localStreamRef={localStreamRef}
         remoteStreamRef={remoteStreamRef}
+        localStream={localStream}
+        setLocalStream={setLocalStream}
+        remoteStream={remoteStream}
+        setRemoteStream={setRemoteStream}
         toggler={toggler}
         remoteName={remoteName}
         name={name}

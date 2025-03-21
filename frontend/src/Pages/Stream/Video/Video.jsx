@@ -20,6 +20,10 @@ const Video = ({
   setVideo,
   toggleVideoIcon,
   toggleAudioIcon,
+  localStream,
+  setLocalStream,
+  remoteStream,
+  setRemoteStream
 }) => {
   const parentRef = useRef(null);
   const childRef = useRef(null);
@@ -42,9 +46,7 @@ const Video = ({
   const chatEndRef = useRef(null);
   const [screenSize, setScreenSize] = useState(window.innerWidth);
   // const [toggleStream, setToggleStream] = useState(false);
-  // const [forceRender, setForceRender] = useState(false);
-  const [bigScreen,setBigScreen] = useState(null)
-  const [smallScreen,setSmallScreen] = useState(null)
+  const [forceRender, setForceRender] = useState(false);
 
   const Zoomed = () => {
     setIsZoomed(!isZoomed);
@@ -197,17 +199,10 @@ const Video = ({
     });
   }, []);
 
-  useEffect(()=>{
-    if(!localStreamRef.current || !remoteStreamRef.current) return
-    setBigScreen(remoteStreamRef.current)
-    setSmallScreen(localStreamRef.current)
-  },[])
-
   const toggleStream = () => {
-    if (!remoteStreamRef || !localStreamRef) return;
-    const tempStream = localStreamRef.current;
-    setSmallScreen(remoteStreamRef.current);
-    setBigScreen(tempStream);
+    const tempStream = localStream
+    setLocalStream(remoteStream)
+    setRemoteStream(tempStream)
     // setForceRender(!forceRender);
     console.log("update hua");
   };
@@ -294,7 +289,7 @@ const Video = ({
           >
             <video
               className="remoteStream"
-              ref={bigScreen}
+              ref={remoteStream}
               autoPlay
               playsInline
             ></video>
@@ -313,7 +308,7 @@ const Video = ({
             >
               <video
                 className="localStream"
-                ref={smallScreen}
+                ref={localStream}
                 autoPlay
                 playsInline
                 style={{

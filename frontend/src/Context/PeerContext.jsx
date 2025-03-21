@@ -12,6 +12,7 @@ const PeerContext = createContext(null);
 const PeerProvider = ({ children }) => {
   const peer = useRef(null);
   const remoteStreamRef = useRef(null);
+  const [remoteStream,setRemoteStream] = useState(null);
   const socket = useContext(SocketContext);
   const [processedCandidates, setProcessedCandidates] = useState(new Set());
 
@@ -21,7 +22,7 @@ const PeerProvider = ({ children }) => {
       peer.current.onicecandidate = null;
       peer.current.close();
     }
-
+  
     peer.current = new RTCPeerConnection({
       iceServers: [
         { urls: "stun:stun.l.google.com:19302" },
@@ -42,29 +43,33 @@ const PeerProvider = ({ children }) => {
         },
       ],
     });
-
+  
     peer.current.ontrack = (event) => {
-      if (!remoteStreamRef.current) {
-        remoteStreamRef.current = new MediaStream();
+      let stream = remoteStreamRef.current;
+  
+      if (!stream) {
+        stream = new MediaStream();
+        remoteStreamRef.current = stream;
+        setRemoteStream(stream);
       }
-
+  
       // ✅ Prevent duplicate tracks
-      const existingTracks = remoteStreamRef.current.srcObject
-        ? remoteStreamRef.current.srcObject.getTracks()
-        : [];
+      const existingTracks = stream.getTracks();
       event.streams[0].getTracks().forEach((track) => {
         if (!existingTracks.includes(track)) {
-          if (!remoteStreamRef.current.srcObject) {
-            remoteStreamRef.current.srcObject = new MediaStream();
-          }
-          remoteStreamRef.current.srcObject.addTrack(track);
+          stream.addTrack(track);
         }
       });
+  
+      // Update both ref and state
+      remoteStreamRef.current = stream;
+      setRemoteStream(new MediaStream(stream.getTracks()));
     };
-
+  
     // ✅ Reset processed candidates when a new connection starts
     setProcessedCandidates(new Set());
   };
+  
 
   useEffect(() => {
     initializePeerConnection();
@@ -138,6 +143,8 @@ const PeerProvider = ({ children }) => {
         createIceCandidate,
         receiveIceCandidate,
         remoteStreamRef,
+        setRemoteStream,
+        remoteStream,
         initializePeerConnection,
       }}
     >
