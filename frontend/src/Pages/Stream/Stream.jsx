@@ -20,7 +20,7 @@ const Stream = ({ setIsZoomed, isZoomed }) => {
   } = useContext(PeerContext);
 
   const localStreamRef = useRef(null);
-  const [localStream,setLocalStream] = useState(null)
+  const [localStream, setLocalStream] = useState(null);
   const [toggler, setToggler] = useState(true);
   const [myId, setMyId] = useState(null);
   const [remoteName, setRemoteName] = useState(null);
@@ -32,76 +32,59 @@ const Stream = ({ setIsZoomed, isZoomed }) => {
   const getLocalStream = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video:{frameRate: 30},
+        video: { frameRate: 30 },
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
-          autoGainControl: true, 
+          autoGainControl: true,
         },
       });
 
       if (stream && localStreamRef.current) {
         localStreamRef.current.srcObject = stream;
-        localStreamRef.current.muted = 'true';
+        localStreamRef.current.muted = "true";
         await addingTrack(stream);
-        setLocalStream(stream)
+        setLocalStream(stream);
       }
     } catch (error) {
       console.error("Error accessing media devices:", error);
     }
   };
 
+  const toggleVideoIcon = () => {
+    if (localStream) {
+      const videoTrack = localStream.getVideoTracks()[0];
+      videoTrack.enabled = !video;
+      console.log(video ? "Video off" : "Video on");
+    }
+  };
 
-  const toggleVideoIcon = ()=>{
-    const videoTrack = localStream.getVideoTracks()[0];
-    videoTrack.enabled = !video;
-    console.log(video?'video off':'video on')
-  }
-
-  const toggleAudioIcon = ()=>{
-    const audioTrack = localStream.getAudioTracks()[0];
-    audioTrack.enabled = !audio;
-    console.log(video?'audio off':'audio on')
-  }
+  const toggleAudioIcon = () => {
+    if (localStream) {
+      const audioTrack = localStream.getAudioTracks()[0];
+      audioTrack.enabled = !audio;
+      console.log(audio ? "Audio off" : "Audio on");
+    }
+  };
 
   const approach = async ([remoteName, remoteId, myId]) => {
     setRemoteId(remoteId);
     setRemoteName(remoteName);
     createIceCandidate(remoteId);
     const offervalue = await offer();
-    socket.current.emit("call", [
-      name,
-      offervalue,
-      myId,
-      remoteId,
-    ]);
+    socket.current.emit("call", [name, offervalue, myId, remoteId]);
   };
 
-  const answerCall = async ([
-    remoteName,
-    offer,
-    remoteId,
-    myId,
-  ]) => {
+  const answerCall = async ([remoteName, offer, remoteId, myId]) => {
     setRemoteName(remoteName);
     createIceCandidate(remoteId);
     const createdAnswer = await answer(offer);
     receiveIceCandidate();
-    socket.current.emit("answerCall", [
-      name,
-      createdAnswer,
-      remoteId,
-      myId,
-    ]);
+    socket.current.emit("answerCall", [name, createdAnswer, remoteId, myId]);
     setFindinguser(false);
   };
 
-  const accept = async ([
-    remoteName,
-    answer,
-    myId,
-    remoteId,
-  ]) => {
+  const accept = async ([remoteName, answer, myId, remoteId]) => {
     await acceptingAnswer(answer);
     receiveIceCandidate();
     socket.current.emit("connectionEstablished", [myId, remoteId]);
@@ -110,11 +93,22 @@ const Stream = ({ setIsZoomed, isZoomed }) => {
 
   const connectUser = () => {
     socket.current.emit("AnyUser", [name, category]);
+
+    // ✅ Remove previous event listeners to prevent duplicates
+    socket.current.off("myId");
+    socket.current.off("finding_users");
+    socket.current.off("approach");
+    socket.current.off("call");
+    socket.current.off("answerCall");
+    socket.current.off("connectionEnd");
+
+    // ✅ Attach new event listeners
     socket.current.on("myId", (id) => setMyId(id));
-    socket.current.off("finding_users").on("finding_users", console.log);
-    socket.current.off("approach").on("approach", approach);
-    socket.current.off("call").on("call", answerCall);
-    socket.current.off("answerCall").on("answerCall", accept);
+    socket.current.on("finding_users", console.log);
+    socket.current.on("approach", approach);
+    socket.current.on("call", answerCall);
+    socket.current.on("answerCall", accept);
+
     socket.current.on("connectionEnd", (msg) => {
       if (remoteStreamRef.current) {
         remoteStreamRef.current.srcObject = null;
@@ -134,10 +128,8 @@ const Stream = ({ setIsZoomed, isZoomed }) => {
         socket.current.off("answerCall");
         socket.current.off("connectionEnd");
       }
-      if (remoteStreamRef.current && remoteStreamRef.current.srcObject) {
-        remoteStreamRef.current.srcObject
-          .getTracks()
-          .forEach((track) => track.stop());
+      if (remoteStreamRef.current?.srcObject) {
+        remoteStreamRef.current.srcObject.getTracks().forEach((track) => track.stop());
         remoteStreamRef.current.srcObject = null;
       }
     };
@@ -145,21 +137,26 @@ const Stream = ({ setIsZoomed, isZoomed }) => {
 
   const handleDisconnection = async () => {
     console.log("Disconnected");
-    // Notify the server about the disconnection
-    socket.current.emit("connectionEnd", {
-      userLeftId: myId,
-      msg: "User left",
-    });
 
-    // Properly close the previous PeerConnection
-    if (remoteStreamRef.current) {
+    // ✅ Notify the server about disconnection
+    socket.current.emit("connectionEnd", { userLeftId: myId, msg: "User left" });
+
+    // ✅ Stop all tracks in local stream
+    if (localStream) {
+      localStream.getTracks().forEach((track) => track.stop());
+      setLocalStream(null);
+    }
+
+    // ✅ Stop all tracks in remote stream
+    if (remoteStreamRef.current?.srcObject) {
+      remoteStreamRef.current.srcObject.getTracks().forEach((track) => track.stop());
       remoteStreamRef.current.srcObject = null;
     }
 
-    // Reset Peer Connection (Important)
+    // ✅ Reset Peer Connection
     initializePeerConnection();
 
-    // Get new local stream and set it to the peer connection
+    // ✅ Get a new local stream
     await getLocalStream();
     setToggler(true);
     setFindinguser(true);
@@ -170,7 +167,6 @@ const Stream = ({ setIsZoomed, isZoomed }) => {
       connectUser();
       console.log("connected");
       setToggler(false);
-      // setUserLeft(false);
     } else {
       handleDisconnection();
     }
@@ -188,7 +184,7 @@ const Stream = ({ setIsZoomed, isZoomed }) => {
         setIsZoomed={setIsZoomed}
         isZoomed={isZoomed}
         findinguser={findinguser}
-        setVideo = {setVideo}
+        setVideo={setVideo}
         setAudio={setAudio}
         video={video}
         audio={audio}

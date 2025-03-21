@@ -13,9 +13,12 @@ const PeerProvider = ({ children }) => {
   const peer = useRef(null);
   const remoteStreamRef = useRef(null);
   const socket = useContext(SocketContext);
+  const [processedCandidates, setProcessedCandidates] = useState(new Set());
 
   const initializePeerConnection = () => {
     if (peer.current) {
+      peer.current.ontrack = null;
+      peer.current.onicecandidate = null;
       peer.current.close();
     }
 
@@ -45,19 +48,22 @@ const PeerProvider = ({ children }) => {
         remoteStreamRef.current = new MediaStream();
       }
 
-      // Ensure only remote tracks are added
+      // ✅ Prevent duplicate tracks
+      const existingTracks = remoteStreamRef.current.srcObject
+        ? remoteStreamRef.current.srcObject.getTracks()
+        : [];
       event.streams[0].getTracks().forEach((track) => {
-        if (!remoteStreamRef.current.srcObject) {
-          remoteStreamRef.current.srcObject = new MediaStream();
-        }
-
-        // Check if track is already added to avoid duplicates
-        const existingTracks = remoteStreamRef.current.srcObject.getTracks();
         if (!existingTracks.includes(track)) {
+          if (!remoteStreamRef.current.srcObject) {
+            remoteStreamRef.current.srcObject = new MediaStream();
+          }
           remoteStreamRef.current.srcObject.addTrack(track);
         }
       });
     };
+
+    // ✅ Reset processed candidates when a new connection starts
+    setProcessedCandidates(new Set());
   };
 
   useEffect(() => {
@@ -65,8 +71,13 @@ const PeerProvider = ({ children }) => {
 
     return () => {
       if (peer.current) {
+        peer.current.ontrack = null;
+        peer.current.onicecandidate = null;
         peer.current.close();
         peer.current = null;
+      }
+      if (socket.current) {
+        socket.current.off("receiveCandidate");
       }
     };
   }, []);
@@ -74,7 +85,6 @@ const PeerProvider = ({ children }) => {
   const offer = async () => {
     const offer = await peer.current.createOffer();
     await peer.current.setLocalDescription(offer);
-    console.log("first step");
     return offer;
   };
 
@@ -82,7 +92,6 @@ const PeerProvider = ({ children }) => {
     await peer.current.setRemoteDescription(offer);
     const answer = await peer.current.createAnswer();
     await peer.current.setLocalDescription(answer);
-    console.log("second step");
     return answer;
   };
 
@@ -93,11 +102,8 @@ const PeerProvider = ({ children }) => {
   };
 
   const acceptingAnswer = async (answer) => {
-    console.log("last step");
     await peer.current.setRemoteDescription(answer);
   };
-
-  const [processedCandidates, setProcessedCandidates] = useState([]);
 
   const createIceCandidate = (remoteId) => {
     peer.current.onicecandidate = (event) => {
@@ -107,38 +113,24 @@ const PeerProvider = ({ children }) => {
     };
   };
 
-  // useEffect(() => {
-  //   if(socket.current){
-  //     socket.current.on("receiveCandidate", async (candidate) => {
-  //       if (peer.current && peer.current.remoteDescription) {
-  //         try {
-  //           await peer.current.addIceCandidate(candidate);
-  //           console.log('connect hogya')
-  //         } catch (error) {
-  //           console.error("Error adding received ICE candidate:", error);
-  //         }
-  //       }
-  //     });
-  //   }
-  // }, []);
-
   const receiveIceCandidate = () => {
+    socket.current.off("receiveCandidate"); // ✅ Prevent multiple listeners
     socket.current.on("receiveCandidate", async (candidate) => {
-      // if (peer.current && peer.current.remoteDescription) {
+      // ✅ Ignore duplicate candidates
+      if (!processedCandidates.has(candidate.candidate)) {
         try {
           await peer.current.addIceCandidate(candidate);
-          console.log("connect hogya");
+          setProcessedCandidates((prev) => new Set(prev).add(candidate.candidate));
         } catch (error) {
           console.error("Error adding received ICE candidate:", error);
         }
-      // }
+      }
     });
   };
 
   return (
     <PeerContext.Provider
       value={{
-        // peer,
         addingTrack,
         offer,
         answer,

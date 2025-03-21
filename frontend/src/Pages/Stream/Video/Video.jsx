@@ -3,7 +3,24 @@ import "./Video.css";
 import img5 from "../../../assets/img5.jpg";
 import EmojiPicker from "emoji-picker-react";
 
-const Video = ({ setIsZoomed, isZoomed ,localStreamRef,remoteStreamRef,name,remoteName,handleBtn,userLeft,findinguser,setFindinguser,audio,video,setAudio,setVideo,toggleVideoIcon,toggleAudioIcon}) => {
+const Video = ({
+  setIsZoomed,
+  isZoomed,
+  localStreamRef,
+  remoteStreamRef,
+  name,
+  remoteName,
+  handleBtn,
+  userLeft,
+  findinguser,
+  setFindinguser,
+  audio,
+  video,
+  setAudio,
+  setVideo,
+  toggleVideoIcon,
+  toggleAudioIcon,
+}) => {
   const parentRef = useRef(null);
   const childRef = useRef(null);
   const [toggleSelect, setToggleSelect] = useState(false);
@@ -24,7 +41,7 @@ const Video = ({ setIsZoomed, isZoomed ,localStreamRef,remoteStreamRef,name,remo
   const [input, setInput] = useState("");
   const chatEndRef = useRef(null);
   const [screenSize, setScreenSize] = useState(window.innerWidth);
-  // const [toggleStream,setToggleStream] = useState(false)
+  const [toggleStream,setToggleStream] = useState(false)
 
   const Zoomed = () => {
     setIsZoomed(!isZoomed);
@@ -126,7 +143,8 @@ const Video = ({ setIsZoomed, isZoomed ,localStreamRef,remoteStreamRef,name,remo
 
   const handleEmojiClick = (emoji) => {
     setInput((prev) => prev + emoji.emoji);
-    inputField.current.value = input + emoji.emoji;
+    inputField.current.value = input + emoji.emoji; 
+    inputField.current.scrollLeft = inputField.current.scrollWidth;
   };
 
   useEffect(() => {
@@ -174,7 +192,6 @@ const Video = ({ setIsZoomed, isZoomed ,localStreamRef,remoteStreamRef,name,remo
     window.addEventListener("resize", () => {
       setScreenSize(window.innerWidth);
     });
-    
   }, []);
 
   return (
@@ -238,208 +255,220 @@ const Video = ({ setIsZoomed, isZoomed ,localStreamRef,remoteStreamRef,name,remo
           padding: isZoomed ? "0" : "",
         }}
       >
-        {(!toggleSelect || screenSize >= "925") && (
+        {/* videoContainer */}
+        <div
+          className="videoContainer"
+          style={{
+            width: isZoomed ? "100%" : "",
+            height: isZoomed ? "100vh" : "",
+            bottom: isZoomed ? "0px" : "",
+            display: screenSize < 925 && toggleSelect ? "none" : "flex",
+          }}
+        >
           <div
-            className="videoContainer"
+            className="video"
             style={{
-              width: isZoomed ? "100%" : "",
               height: isZoomed ? "100vh" : "",
-              bottom: isZoomed ? "0px" : "",
+              position: isZoomed ? "absolute" : "relative",
+              borderRadius: isZoomed ? "0" : "",
             }}
+            ref={parentRef}
           >
-            <div
-              className="video"
-              style={{
-                height: isZoomed ? "100vh" : "",
-                position: isZoomed ? "absolute" : "relative",
-                borderRadius: isZoomed ? "0" : "",
-              }}
-              ref={parentRef}
-            >
-              <video className="remoteStream" ref={remoteStreamRef} autoPlay playsInline
-              ></video>
+            <video
+              className="remoteStream"
+              ref={toggleStream?localStreamRef:remoteStreamRef}
+              autoPlay
+              playsInline
+            ></video>
 
-              <div
-                className="mystream"
+            <div
+              className="mystream"
+              style={{
+                position: "absolute",
+                top: `${position.top}px`,
+                left: `${position.left}px`,
+                cursor: isDragging ? "grabbing" : "grab",
+              }}
+              ref={childRef}
+              onMouseDown={handleMouseDown}
+              onTouchStart={handleMouseDown}
+            >
+              <video
+                className="localStream"
+                ref={toggleStream?remoteStreamRef:localStreamRef}
+                autoPlay
+                playsInline
                 style={{
-                  position: "absolute",
-                  top: `${position.top}px`,
-                  left: `${position.left}px`,
-                  cursor: isDragging ? "grabbing" : "grab",
+                  display:!video?'none':''
                 }}
-                ref={childRef}
-                onMouseDown={handleMouseDown}
-                onTouchStart={handleMouseDown}
-              >
-                <video className="localStream" ref={localStreamRef} autoPlay playsInline
-                ></video>
-                <i className="fa-solid fa-expand"></i>
-              </div>
-              <div
-                className="zoomIcon"
-                onClick={Zoomed}
-                onTouchStart={Zoomed}
-                style={{
-                  position: "absolute",
-                  top: `${iconsPos.top}px`,
-                  left: `${iconsPos.left}px`,
-                }}
-              >
-                <i className="fa-solid fa-expand"></i>
-              </div>
-              {findinguser && <div className="waiting">
+              ></video>
+              <i className="fa-solid fa-expand" onClick={()=>setToggleStream(!toggleStream)}></i>
+            </div>
+            <div
+              className="zoomIcon"
+              onClick={Zoomed}
+              onTouchStart={Zoomed}
+              style={{
+                position: "absolute",
+                top: `${iconsPos.top}px`,
+                left: `${iconsPos.left}px`,
+              }}
+            >
+              <i className="fa-solid fa-expand"></i>
+            </div>
+            {findinguser && (
+              <div className="waiting">
                 <h3>Waiting for Someone to Join</h3>
                 <div className="ballContainer">
                   <div className="balls"></div>
                   <div className="balls"></div>
                   <div className="balls"></div>
                 </div>
-              </div>}
+              </div>
+            )}
+          </div>
+
+          <div
+            className="btndiv"
+            style={{
+              position: isZoomed ? "absolute" : "relative",
+              bottom: isZoomed ? "0" : "",
+              borderRadius: isZoomed ? "0" : "",
+              backgroundColor: isZoomed ? "rgba(255,255,255,0.01)" : "",
+            }}
+          >
+            <div
+              className={`icons ${audio?'audio_on':'audio_off'}`}
+              onClick={() => {
+                setAudio(!audio);
+                toggleAudioIcon();
+              }}
+              onTouchStart={() => {
+                setAudio(!audio);
+                toggleAudioIcon();
+              }}
+            >
+              {audio ? (
+                <i className="fa-solid fa-microphone"></i>
+              ) : (
+                <i className="fa-solid fa-microphone-slash"></i>
+              )}
             </div>
 
             <div
-              className="btndiv"
-              style={{
-                position: isZoomed ? "absolute" : "relative",
-                bottom: isZoomed ? "0" : "",
-                borderRadius: isZoomed ? "0" : "",
-                backgroundColor: isZoomed ? "rgba(255,255,255,0.01)" : "",
+              className={`icons ${video?'video_on':'video_off'}`}
+              onClick={() => {
+                setVideo(!video);
+                toggleVideoIcon();
+              }}
+              onTouchStart={() => {
+                setVideo(!video);
+                toggleVideoIcon();
               }}
             >
-              <div
-                className="icons"
-                onClick={() => {
-                  setAudio(!audio);
-                  toggleAudioIcon();
-                }}
-                
-                onTouchStart={() => {
-                  setAudio(!audio);
-                  toggleAudioIcon();
-                }}
-                
-                style={{
-                  backgroundColor: audio
-                    ? "rgba(0, 255, 0, 0.3)"
-                    : "rgba(255, 0, 0, 0.3)",
-                }}
-              >
-                {audio ? (
-                  <i className="fa-solid fa-microphone"></i>
-                ) : (
-                  <i className="fa-solid fa-microphone-slash"></i>
-                )}
-              </div>
-              <div
-                className="icons"
-                onClick={() => {setVideo(!video);toggleVideoIcon()}}
-                onTouchStart={() => {setVideo(!video);toggleVideoIcon()}}
-                style={{
-                  backgroundColor: video
-                    ? "rgba(0, 255, 0, 0.3)"
-                    : "rgba(255, 0, 0, 0.3)",
-                }}
-              >
-                {video ? (
-                  <i className="fa-solid fa-video"></i>
-                ) : (
-                  <i className="fa-solid fa-video-slash"></i>
-                )}
-              </div>
-              <div className="icons" onClick={handleBtn}
-              onTouchStart={handleBtn}>
-                <i className="fa-solid fa-forward"></i>
-              </div>
+              {video ? (
+                <i className="fa-solid fa-video"></i>
+              ) : (
+                <i className="fa-solid fa-video-slash"></i>
+              )}
+            </div>
+
+            <div className="icons next" onClick={handleBtn} onTouchStart={handleBtn}
+            >
+              <i className="fa-solid fa-forward"></i>
             </div>
           </div>
-        )}
+        </div>
 
-        {/* message box */}
-        {(screenSize >= 925 || toggleSelect) && (
-          <div
-            className="messageContainer"
-            style={{ display: isZoomed ? "none" : "" }}
-          >
-            <div className="logo">Chat Messages</div>
-            <div className="messageBox">
-              {messages.map(({ msg, type }, index) => (
+        {/* messageContainer */}
+        <div
+          className="messageContainer"
+          style={{
+            display:
+              (screenSize < 925 && !toggleSelect) || isZoomed ? "none" : "flex",
+          }}
+        >
+          <div className="logo">Chat Messages</div>
+          <div className="messageBox">
+            {messages.map(({ msg, type }, index) => (
+              <div
+                className="chat"
+                key={index}
+                style={{
+                  alignSelf: type === "receiver" ? "flex-start" : "flex-end",
+                  width: "75%",
+                  justifyContent:
+                    type === "receiver" ? "flex-start" : "flex-end",
+                  width: "75%",
+                }}
+              >
                 <div
-                  className="chat"
-                  key={index}
+                  className="msgboxchild"
                   style={{
-                    alignSelf: type === "receiver" ? "flex-start" : "flex-end",
-                    width: "75%",
-                    justifyContent:
-                      type === "receiver" ? "flex-start" : "flex-end",
-                    width: "75%",
+                    // width: "100%",
+                    display: "flex",
+                    alignItems: "center",
+                    textAlign: type == "receiver" ? "start" : "end",
+                    gap: "10px",
+                    padding: "5px",
+                    fontSize: "18px",
                   }}
                 >
                   <div
-                    className="msgboxchild"
+                    className="chatmessage"
                     style={{
-                      // width: "100%",
-                      display: "flex",
-                      alignItems: "center",
-                      textAlign: type == "receiver" ? "start" : "end",
-                      gap: "10px",
-                      padding: "5px",
-                      fontSize: "18px",
+                      backgroundColor:
+                        type === "receiver"
+                          ? "rgba(238, 231, 231, 0.2)"
+                          : "rgba(23, 172, 70, 0.1)",
                     }}
                   >
-                    <div
-                      className="chatmessage"
-                      style={{
-                        backgroundColor:
-                          type === "receiver"
-                            ? "rgba(238, 231, 231, 0.2)"
-                            : "rgba(23, 172, 70, 0.1)",
-                      }}
-                    >
-                      {msg}
-                    </div>
+                    {msg}
                   </div>
                 </div>
-              ))}
-              <div ref={chatEndRef} />
-            </div>
-
-            {/* Emoji Picker - Clicking outside hides it */}
-            {showPicker && (
-              <div
-                ref={emojiPickerRef}
-                style={{
-                  position: "absolute",
-                  bottom: "20px",
-                  left: "-10px",
-                  transform: "scale(0.8)",
-                }}
-              >
-                <EmojiPicker onEmojiClick={handleEmojiClick} />
               </div>
-            )}
-
-            {/* Input Field */}
-            <div className="inputField">
-              <button
-                ref={emojiBtnRef}
-                className="emojiBtn"
-                onClick={() => setShowPicker(!showPicker)}
-              >
-                <i className="fa-solid fa-face-smile"></i>
-              </button>
-              <input
-                ref={inputField}
-                type="text"
-                placeholder="type your message"
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e)=>{if(e.key === 'Enter')sendMessage()}}
-              />
-              <button className="sendBtn" onClick={sendMessage}>
-                <i className="fa-solid fa-paper-plane"></i>
-              </button>
-            </div>
+            ))}
+            <div ref={chatEndRef} />
           </div>
-        )}
+
+          {/* Emoji Picker - Clicking outside hides it */}
+          {showPicker && (
+            <div
+              ref={emojiPickerRef}
+              style={{
+                position: "absolute",
+                bottom: "20px",
+                left: "-10px",
+                transform: "scale(0.8)",
+              }}
+            >
+              <EmojiPicker onEmojiClick={handleEmojiClick} />
+            </div>
+          )}
+
+          {/* Input Field */}
+          <div className="inputField">
+            <button
+              ref={emojiBtnRef}
+              className="emojiBtn"
+              onClick={() => setShowPicker(!showPicker)}
+            >
+              <i className="fa-solid fa-face-smile"></i>
+            </button>
+            <input
+              ref={inputField}
+              type="text"
+              placeholder="type your message"
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") sendMessage();
+              }}
+            />
+            <button className="sendBtn" onClick={sendMessage}>
+              <i className="fa-solid fa-paper-plane"></i>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
