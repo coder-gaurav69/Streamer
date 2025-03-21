@@ -42,6 +42,7 @@ const Video = ({
   const chatEndRef = useRef(null);
   const [screenSize, setScreenSize] = useState(window.innerWidth);
   const [toggleStream, setToggleStream] = useState(false);
+  const [forceRender,setForceRender] = useState(false);
 
   const Zoomed = () => {
     setIsZoomed(!isZoomed);
@@ -200,7 +201,7 @@ const Video = ({
     const tempStream = localStreamRef;
     localStreamRef = remoteStreamRef;
     remoteStreamRef = tempStream;
-    console.log('changed')
+    setForceRender(!forceRender);
   },[toggleStream])
 
   return (
