@@ -194,6 +194,14 @@ const Video = ({
     });
   }, []);
 
+
+  useEffect(()=>{
+    if(!remoteStreamRef || !localStreamRef) return;
+    const tempStream = localStreamRef;
+    localStreamRef = remoteStreamRef;
+    remoteStreamRef = tempStream;
+  },[toggleStream])
+
   return (
     <div
       className="main"
@@ -276,7 +284,7 @@ const Video = ({
           >
             <video
               className="remoteStream"
-              ref={toggleStream ? localStreamRef : remoteStreamRef}
+              ref={remoteStreamRef}
               autoPlay
               playsInline
             ></video>
@@ -295,7 +303,7 @@ const Video = ({
             >
               <video
                 className="localStream"
-                ref={toggleStream ? remoteStreamRef : localStreamRef}
+                ref={localStreamRef}
                 autoPlay
                 playsInline
                 style={{
