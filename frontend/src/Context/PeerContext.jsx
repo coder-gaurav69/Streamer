@@ -1,13 +1,11 @@
 import React, { createContext, useEffect, useRef, useState } from "react";
-import { SocketContext } from "../../Context/SocketContext";
 
 const PeerContext = createContext(null);
 
 const PeerProvider = ({ children }) => {
   const peer = useRef(null);
   const remoteStreamRef = useRef(null);
-  // const [iceCandidate, setIceCandidate] = useState([]);
-  const socket = useContext(SocketContext);
+  const [iceCandidate, setIceCandidate] = useState([]);
 
   const initializePeerConnection = () => {
     if (peer.current) {
@@ -69,7 +67,7 @@ const PeerProvider = ({ children }) => {
   const offer = async () => {
     const offer = await peer.current.createOffer();
     await peer.current.setLocalDescription(offer);
-    console.log('first step')
+    console.log("first step");
     return offer;
   };
 
@@ -77,7 +75,7 @@ const PeerProvider = ({ children }) => {
     await peer.current.setRemoteDescription(offer);
     const answer = await peer.current.createAnswer();
     await peer.current.setLocalDescription(answer);
-    console.log('second step')
+    console.log("second step");
     return answer;
   };
 
@@ -88,37 +86,35 @@ const PeerProvider = ({ children }) => {
   };
 
   const acceptingAnswer = async (answer) => {
-    console.log('last step')
+    console.log("last step");
     await peer.current.setRemoteDescription(answer);
   };
 
   const [processedCandidates, setProcessedCandidates] = useState([]);
 
-  const createIceCandidate = (remoteId) => {
-  peer.current.onicecandidate = (event) => {
-    if (event.candidate) {
-      socket.current.emit("ice-candidate", { candidate: event.candidate, remoteId });
+  const createIceCandidate = () => {
+    peer.current.onicecandidate = (event) => {
+      if (event.candidate) {
+        // console.log(event.candidate);
+        setIceCandidate((prevCandidates) => [
+          ...prevCandidates,
+          event.candidate,
+        ]);
+      }
+    };
+  };
+
+  const receiveIceCandidate = async () => {
+    for (const candidate of iceCandidate) {
+      if (candidate) {
+        await peer.current.addIceCandidate(new RTCIceCandidate(candidate));
+      }
     }
   };
-};
-
-
-  socket.current.on("ice-candidate", async ({ candidate }) => {
-  if (candidate) {
-    try {
-      await peer.current.addIceCandidate(new RTCIceCandidate(candidate));
-      console.log("Added ICE candidate:", candidate);
-    } catch (error) {
-      console.error("Error adding ICE candidate:", error);
-    }
-  }
-});
-
 
   // ✅ This ensures dynamic updates without re-processing
   useEffect(() => {
     if(peer.current.remoteDescription){
-      console.log(peer.current.remoteDescription)
       receiveIceCandidate();
     }
   }, [iceCandidate]);

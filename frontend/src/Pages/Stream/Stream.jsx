@@ -67,37 +67,50 @@ const Stream = ({ setIsZoomed, isZoomed }) => {
   const approach = async ([remoteName, remoteId, myId]) => {
     setRemoteId(remoteId);
     setRemoteName(remoteName);
-    createIceCandidate(remoteId);
     const offervalue = await offer();
-    console.log(offervalue)
+    const iceCandidate = createIceCandidate();
     socket.current.emit("call", [
       name,
       offervalue,
-      // iceCandidate,
+      iceCandidate,
       myId,
       remoteId,
     ]);
   };
 
-  const answerCall = async ([remoteName, offer, remoteId, myId]) => {
-  setRemoteName(remoteName);
-  createIceCandidate(remoteId);
-  
-  const createdAnswer = await answer(offer);
-  console.log(createdAnswer);
-  
-  socket.current.emit("answerCall", [name, createdAnswer, remoteId, myId]);
-  setFindinguser(false);
-};
+  const answerCall = async ([
+    remoteName,
+    offer,
+    remoteIceCandidate,
+    remoteId,
+    myId,
+  ]) => {
+    setRemoteName(remoteName);
+    const createdAnswer = await answer(offer);
+    await receiveIceCandidate(remoteIceCandidate);
+    const iceCandidate = createIceCandidate();
+    socket.current.emit("answerCall", [
+      name,
+      createdAnswer,
+      iceCandidate,
+      remoteId,
+      myId,
+    ]);
+    setFindinguser(false);
+  };
 
-
-const accept = async ([remoteName, answer, myId, remoteId]) => {
-  await acceptingAnswer(answer); // Ensure remote description is set
-  
-  socket.current.emit("connectionEstablished", [myId, remoteId]);
-  setFindinguser(false);
-};
-
+  const accept = async ([
+    remoteName,
+    answer,
+    remoteIceCandidate,
+    myId,
+    remoteId,
+  ]) => {
+    await acceptingAnswer(answer);
+    await receiveIceCandidate(remoteIceCandidate);
+    socket.current.emit("connectionEstablished", [myId, remoteId]);
+    setFindinguser(false);
+  };
 
   const connectUser = () => {
     socket.current.emit("AnyUser", [name, category]);
