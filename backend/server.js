@@ -55,22 +55,7 @@ io.on("connection", (socket) => {
   });
 
 
-<<<<<<< HEAD
-    // Handle ICE candidate exchange
-  socket.on("ice-candidate", ({ candidate, remoteId }) => {
-    console.log(`ICE Candidate received from ${socket.id} to ${remoteId}`);
-    
-    if (remoteId) {
-      io.to(remoteId).emit("ice-candidate", { candidate });
-    }
-  });
-
   socket.on("connectionEnd", ({ userLeftId }) => {
-=======
-  
-  socket.on("connectionEnd", (data) => {
-    const { userLeftId } = data;
->>>>>>> 0d067f4 (Updated)
     const remoteId = ConnectedUsers.get(userLeftId);
 
     if (remoteId) {
