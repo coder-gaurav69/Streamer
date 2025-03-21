@@ -13,7 +13,6 @@ const PeerProvider = ({ children }) => {
   const peer = useRef(null);
   const remoteStreamRef = useRef(null);
   const socket = useContext(SocketContext);
-  // const [iceCandidate, setIceCandidate] = useState([]);
 
   const initializePeerConnection = () => {
     if (peer.current) {

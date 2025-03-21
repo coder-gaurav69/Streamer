@@ -72,7 +72,6 @@ const Stream = ({ setIsZoomed, isZoomed }) => {
     socket.current.emit("call", [
       name,
       offervalue,
-      // iceCandidate,
       myId,
       remoteId,
     ]);
@@ -81,7 +80,6 @@ const Stream = ({ setIsZoomed, isZoomed }) => {
   const answerCall = async ([
     remoteName,
     offer,
-    // remoteIceCandidate,
     remoteId,
     myId,
   ]) => {
@@ -92,7 +90,6 @@ const Stream = ({ setIsZoomed, isZoomed }) => {
     socket.current.emit("answerCall", [
       name,
       createdAnswer,
-      // iceCandidate,
       remoteId,
       myId,
     ]);
@@ -102,7 +99,6 @@ const Stream = ({ setIsZoomed, isZoomed }) => {
   const accept = async ([
     remoteName,
     answer,
-    // remoteIceCandidate,
     myId,
     remoteId,
   ]) => {

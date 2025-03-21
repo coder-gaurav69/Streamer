@@ -57,6 +57,7 @@ io.on("connection", (socket) => {
     socket.to(remoteId).emit("answerCall", data);
   });
 
+  // for iceCandidate Exchange
   socket.on('iceCandidate',(data)=>{
     const [candidate,remoteId] = data;
     socket.to(remoteId).emit('receiveCandidate',candidate)
