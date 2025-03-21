@@ -93,24 +93,25 @@ const PeerProvider = ({ children }) => {
   const [processedCandidates, setProcessedCandidates] = useState([]);
 
   const createIceCandidate = () => {
-    peer.current.onicecandidate = (event) => {
-      if (event.candidate) {
-        // console.log(event.candidate);
-        setIceCandidate((prevCandidates) => [
-          ...prevCandidates,
-          event.candidate,
-        ]);
-      }
-    };
-  };
-
-  const receiveIceCandidate = async () => {
-    for (const candidate of iceCandidate) {
-      if (candidate) {
-        await peer.current.addIceCandidate(new RTCIceCandidate(candidate));
-      }
+  peer.current.onicecandidate = (event) => {
+    if (event.candidate) {
+      socket.current.emit("ice-candidate", { candidate: event.candidate, remoteId });
     }
   };
+};
+
+
+  socket.current.on("ice-candidate", async ({ candidate }) => {
+  if (candidate) {
+    try {
+      await peer.current.addIceCandidate(new RTCIceCandidate(candidate));
+      console.log("Added ICE candidate:", candidate);
+    } catch (error) {
+      console.error("Error adding ICE candidate:", error);
+    }
+  }
+});
+
 
   // ✅ This ensures dynamic updates without re-processing
   useEffect(() => {
