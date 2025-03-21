@@ -20,10 +20,6 @@ const Video = ({
   setVideo,
   toggleVideoIcon,
   toggleAudioIcon,
-  localStream,
-  setLocalStream,
-  remoteStream,
-  setRemoteStream
 }) => {
   const parentRef = useRef(null);
   const childRef = useRef(null);
@@ -45,8 +41,7 @@ const Video = ({
   const [input, setInput] = useState("");
   const chatEndRef = useRef(null);
   const [screenSize, setScreenSize] = useState(window.innerWidth);
-  // const [toggleStream, setToggleStream] = useState(false);
-  const [forceRender, setForceRender] = useState(false);
+  // const [toggleStream,setToggleStream] = useState(false)
 
   const Zoomed = () => {
     setIsZoomed(!isZoomed);
@@ -148,7 +143,7 @@ const Video = ({
 
   const handleEmojiClick = (emoji) => {
     setInput((prev) => prev + emoji.emoji);
-    inputField.current.value = input + emoji.emoji;
+    inputField.current.value = input + emoji.emoji; 
     inputField.current.scrollLeft = inputField.current.scrollWidth;
   };
 
@@ -198,14 +193,6 @@ const Video = ({
       setScreenSize(window.innerWidth);
     });
   }, []);
-
-  const toggleStream = () => {
-    const tempStream = localStream
-    setLocalStream(remoteStream)
-    setRemoteStream(tempStream)
-    // setForceRender(!forceRender);
-    console.log("update hua");
-  };
 
   return (
     <div
@@ -289,9 +276,12 @@ const Video = ({
           >
             <video
               className="remoteStream"
-              ref={remoteStream}
+              ref={remoteStreamRef}
               autoPlay
               playsInline
+              // style={{
+              //   display:!video?'none':''
+              // }}
             ></video>
 
             <div
@@ -308,19 +298,15 @@ const Video = ({
             >
               <video
                 className="localStream"
-                ref={localStream}
+                ref={localStreamRef}
                 autoPlay
                 playsInline
                 style={{
-                  display: !video ? "none" : "",
+                  display:!video?'none':''
                 }}
               ></video>
-              <i
-                className="fa-solid fa-expand"
-                onClick={toggleStream}
-              ></i>
+              <i className="fa-solid fa-expand"></i>
             </div>
-
             <div
               className="zoomIcon"
               onClick={Zoomed}
@@ -355,7 +341,7 @@ const Video = ({
             }}
           >
             <div
-              className={`icons ${audio ? "audio_on" : "audio_off"}`}
+              className={`icons ${audio?'audio_on':'audio_off'}`}
               onClick={() => {
                 setAudio(!audio);
                 toggleAudioIcon();
@@ -373,7 +359,7 @@ const Video = ({
             </div>
 
             <div
-              className={`icons ${video ? "video_on" : "video_off"}`}
+              className={`icons ${video?'video_on':'video_off'}`}
               onClick={() => {
                 setVideo(!video);
                 toggleVideoIcon();
@@ -390,10 +376,7 @@ const Video = ({
               )}
             </div>
 
-            <div
-              className="icons next"
-              onClick={handleBtn}
-              onTouchStart={handleBtn}
+            <div className="icons next" onClick={handleBtn} onTouchStart={handleBtn}
             >
               <i className="fa-solid fa-forward"></i>
             </div>
