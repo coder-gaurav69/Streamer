@@ -79,38 +79,25 @@ const Stream = ({ setIsZoomed, isZoomed }) => {
     ]);
   };
 
-  const answerCall = async ([
-    remoteName,
-    offer,
-    remoteId,
-    myId
-  ]) => {
-    setRemoteName(remoteName);
-    createIceCandidate();
-    const createdAnswer = await answer(offer);
-    console.log(createdAnswer)
-    receiveIceCandidate();
-    socket.current.emit("answerCall", [
-      name,
-      createdAnswer,
-      remoteId,
-      myId,
-    ]);
-    setFindinguser(false);
-  };
+  const answerCall = async ([remoteName, offer, remoteId, myId]) => {
+  setRemoteName(remoteName);
+  createIceCandidate();
+  
+  const createdAnswer = await answer(offer);
+  console.log(createdAnswer);
+  
+  socket.current.emit("answerCall", [name, createdAnswer, remoteId, myId]);
+  setFindinguser(false);
+};
 
-  const accept = async ([
-    remoteName,
-    answer,
-    // remoteIceCandidate,
-    myId,
-    remoteId,
-  ]) => {
-    await acceptingAnswer(answer);
-    receiveIceCandidate();
-    socket.current.emit("connectionEstablished", [myId, remoteId]);
-    setFindinguser(false);
-  };
+
+const accept = async ([remoteName, answer, myId, remoteId]) => {
+  await acceptingAnswer(answer); // Ensure remote description is set
+  
+  socket.current.emit("connectionEstablished", [myId, remoteId]);
+  setFindinguser(false);
+};
+
 
   const connectUser = () => {
     socket.current.emit("AnyUser", [name, category]);
