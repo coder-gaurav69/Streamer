@@ -200,6 +200,7 @@ const Video = ({
     const tempStream = localStreamRef;
     localStreamRef = remoteStreamRef;
     remoteStreamRef = tempStream;
+    console.log('changed')
   },[toggleStream])
 
   return (
