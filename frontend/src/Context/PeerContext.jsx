@@ -115,6 +115,7 @@ const PeerProvider = ({ children }) => {
   // ✅ This ensures dynamic updates without re-processing
   useEffect(() => {
     if(peer.current.remoteDescription){
+      console.log('set hogya')
       receiveIceCandidate();
     }
   }, [iceCandidate]);
