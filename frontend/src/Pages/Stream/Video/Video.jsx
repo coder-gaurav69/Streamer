@@ -42,7 +42,8 @@ const Video = ({
   const chatEndRef = useRef(null);
   const [screenSize, setScreenSize] = useState(window.innerWidth);
   const [toggleStream, setToggleStream] = useState(false);
-  const [forceRender,setForceRender] = useState(false);
+  const [bigStream,setBigStream] = useState(null)
+  const [smallStream,setSmallStream] = useState(null)
 
   const Zoomed = () => {
     setIsZoomed(!isZoomed);
@@ -197,11 +198,9 @@ const Video = ({
 
 
   useEffect(()=>{
-    if(!remoteStreamRef || !localStreamRef) return;
-    const tempStream = localStreamRef;
-    localStreamRef = remoteStreamRef;
-    remoteStreamRef = tempStream;
-    setForceRender(!forceRender);
+    if(!remoteStreamRef.current || !localStreamRef.current) return;
+    setSmallStream(toggleStream ? remoteStreamRef.current : localStreamRef.current)
+    setBigStream(toggleStream ? localStreamRef.current : remoteStreamRef.current)
   },[toggleStream])
 
   return (
@@ -286,7 +285,7 @@ const Video = ({
           >
             <video
               className="remoteStream"
-              ref={remoteStreamRef}
+              ref={bigStream}
               autoPlay
               playsInline
             ></video>
@@ -305,7 +304,7 @@ const Video = ({
             >
               <video
                 className="localStream"
-                ref={localStreamRef}
+                ref={smallStream}
                 autoPlay
                 playsInline
                 style={{
