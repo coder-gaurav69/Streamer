@@ -41,8 +41,8 @@ const Video = ({
   const [input, setInput] = useState("");
   const chatEndRef = useRef(null);
   const [screenSize, setScreenSize] = useState(window.innerWidth);
-  const [toggleStream, setToggleStream] = useState(false);
-  const [forceRender,setForceRender] = useState(false)
+  // const [toggleStream, setToggleStream] = useState(false);
+  const [forceRender, setForceRender] = useState(false);
 
   const Zoomed = () => {
     setIsZoomed(!isZoomed);
@@ -195,15 +195,14 @@ const Video = ({
     });
   }, []);
 
-
-  useEffect(()=>{
-    if(!remoteStreamRef || !localStreamRef) return;
+  const toggleStream = () => {
+    if (!remoteStreamRef || !localStreamRef) return;
     const tempStream = localStreamRef.current;
     localStreamRef.current = remoteStreamRef.current;
     remoteStreamRef.current = tempStream;
     setForceRender(!forceRender);
-    console.log('update hua')
-  },[toggleStream])
+    console.log("update hua");
+  };
 
   return (
     <div
@@ -315,7 +314,7 @@ const Video = ({
               ></video>
               <i
                 className="fa-solid fa-expand"
-                onClick={() => setToggleStream((prev) => !prev)}
+                onClick={toggleStream}
               ></i>
             </div>
 
