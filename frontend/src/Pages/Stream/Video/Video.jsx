@@ -314,7 +314,7 @@ const Video = ({
                   display:!video?'none':''
                 }}
               ></video>
-              <i className="fa-solid fa-expand" onClick={switchStream}></i>
+              <i className="fa-solid fa-expand" onClick={switchStream} onTouchStart={switchStream}></i>
             </div>
             <div
               className="zoomIcon"
