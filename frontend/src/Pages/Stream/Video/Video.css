@@ -73,7 +73,7 @@
   border-radius: 10px 10px 0 0;
   transition: 0.3s all;
   object-fit: cover;
-  /* background-color: rgba(0, 0, 0, 0.5) !important; */
+  object-position: center;
 }
 
 
@@ -96,6 +96,7 @@
   position:absolute;
   border-radius: 20px;
   object-fit: cover;
+  object-position: center;
 }
 
 .video .mystream>i{
