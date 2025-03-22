@@ -41,7 +41,7 @@ const Video = ({
   const [input, setInput] = useState("");
   const chatEndRef = useRef(null);
   const [screenSize, setScreenSize] = useState(window.innerWidth);
-  // const [toggleStream,setToggleStream] = useState(false)
+  const [toggleStream,setToggleStream] = useState(false)
 
   const Zoomed = () => {
     setIsZoomed(!isZoomed);
@@ -194,6 +194,18 @@ const Video = ({
     });
   }, []);
 
+  const switchStream = () => {
+    if (!localStreamRef.current || !remoteStreamRef.current) return;
+  
+    // Swap the actual stream objects
+    const localStream = localStreamRef.current.srcObject;
+    const remoteStream = remoteStreamRef.current.srcObject;
+  
+    localStreamRef.current.srcObject = remoteStream;
+    remoteStreamRef.current.srcObject = localStream;
+  };
+  
+
   return (
     <div
       className="main"
@@ -279,9 +291,6 @@ const Video = ({
               ref={remoteStreamRef}
               autoPlay
               playsInline
-              // style={{
-              //   display:!video?'none':''
-              // }}
             ></video>
 
             <div
@@ -305,7 +314,7 @@ const Video = ({
                   display:!video?'none':''
                 }}
               ></video>
-              <i className="fa-solid fa-expand"></i>
+              <i className="fa-solid fa-expand" onClick={switchStream}></i>
             </div>
             <div
               className="zoomIcon"
