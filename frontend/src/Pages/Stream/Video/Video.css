@@ -111,7 +111,7 @@
   position: absolute;
   top: 10px;
   left: 10px;
-  color: rgba(0, 0, 0, 0.2);
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .video > .zoomIcon > i {
@@ -363,6 +363,10 @@
 
   .video{
     height:450px;
+  }
+
+  .video>.remoteStream{
+    position:absolute;
   }
 
   .waiting>h3{
