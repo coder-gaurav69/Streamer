@@ -42,6 +42,7 @@ const Video = ({
   const chatEndRef = useRef(null);
   const [screenSize, setScreenSize] = useState(window.innerWidth);
   const [toggleStream,setToggleStream] = useState(false)
+  const [localStreamMuted,setLocalStreamMuted] = useState(true)
 
   const Zoomed = () => {
     setIsZoomed(!isZoomed);
@@ -198,11 +199,14 @@ const Video = ({
     if (!localStreamRef.current || !remoteStreamRef.current) return;
   
     // Swap the actual stream objects
-    const localStream = localStreamRef.current.srcObject;
-    const remoteStream = remoteStreamRef.current.srcObject;
+    const localStream = localStreamRef.current.srcObject; //mine other
+    const remoteStream = remoteStreamRef.current.srcObject; // other mine
   
-    localStreamRef.current.srcObject = remoteStream;
-    remoteStreamRef.current.srcObject = localStream;
+    localStreamRef.current.srcObject = remoteStream; //other mine
+    localStreamRef.current.muted = !localStreamMuted; // false true
+    remoteStreamRef.current.srcObject = localStream; // mine other
+    remoteStreamRef.current.muted = localStreamMuted; // true false
+    setLocalStreamMuted(!localStreamMuted)
   };
   
 

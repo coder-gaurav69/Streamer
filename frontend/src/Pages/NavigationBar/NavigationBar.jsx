@@ -18,8 +18,7 @@ const NavigationBar = ({ setLoginStatus }) => {
             <div
               style={{
                 padding: "2%",
-                background:
-                  "linear-gradient(to left, rgba(17, 139, 239, 0.5), rgba(28, 222, 10, 0.5))",
+                background: 'linear-gradient(to right, rgba(0, 123, 255, 0.8), rgba(0, 255, 200, 0.2))',
                 borderRadius: "10px",
               }}
             >
