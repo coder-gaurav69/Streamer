@@ -77,6 +77,7 @@ const Stream = ({ setIsZoomed, isZoomed }) => {
 
   const answerCall = async ([remoteName, offer, remoteId, myId]) => {
     setRemoteName(remoteName);
+    setRemoteId(remoteId)
     createIceCandidate(remoteId);
     const createdAnswer = await answer(offer);
     receiveIceCandidate();
@@ -179,6 +180,7 @@ const Stream = ({ setIsZoomed, isZoomed }) => {
         remoteStreamRef={remoteStreamRef}
         toggler={toggler}
         remoteName={remoteName}
+        remoteId = {remoteId}
         name={name}
         handleBtn={handleBtn}
         setIsZoomed={setIsZoomed}

@@ -273,7 +273,7 @@
   }
 
 .messageContainer .messageBox .chat {
-  width: 60%;
+  width: 100%;
   display: flex;
   align-items: center;
   font-size: 18px;
@@ -282,9 +282,10 @@
 
 
 .messageContainer .messageBox .chatmessage {
-  width:100%;
-  padding: 5px 30px;
+  min-width:60px;
+  padding: 8px 10px;
   border-radius: 10px 10px 0 10px;
+  text-align:center;
 }
 
 

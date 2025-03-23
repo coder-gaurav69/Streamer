@@ -1,7 +1,8 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect,useContext } from "react";
 import "./Video.css";
 import img5 from "../../../assets/img5.jpg";
 import EmojiPicker from "emoji-picker-react";
+import { SocketContext } from "../../../Context/SocketContext";
 
 const Video = ({
   setIsZoomed,
@@ -10,6 +11,7 @@ const Video = ({
   remoteStreamRef,
   name,
   remoteName,
+  remoteId,
   handleBtn,
   userLeft,
   findinguser,
@@ -21,6 +23,7 @@ const Video = ({
   toggleVideoIcon,
   toggleAudioIcon,
 }) => {
+  const socket = useContext(SocketContext);
   const parentRef = useRef(null);
   const childRef = useRef(null);
   const [toggleSelect, setToggleSelect] = useState(false);
@@ -30,12 +33,7 @@ const Video = ({
   const [position, setPosition] = useState({ left: 10, top: 10 });
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [iconsPos, setIconPos] = useState({ left: 10, top: 10 });
-  const [messages, setMessages] = useState([
-    { msg: "hello", type: "sender" },
-    { msg: "how", type: "receiver" },
-    { msg: "are", type: "sender" },
-    { msg: "you", type: "receiver" },
-  ]);
+  const [messages, setMessages] = useState([]);
   const inputField = useRef(null);
   const [showPicker, setShowPicker] = useState(false);
   const [input, setInput] = useState("");
@@ -138,8 +136,10 @@ const Video = ({
   const sendMessage = () => {
     if (input.trim() === "") return;
     setMessages((prev) => [...prev, { msg: input, type: "sender" }]);
-    setInput("");
+    socket.current.emit('sendMessage',{remoteId:remoteId,msg:input,type:'sender'})
     inputField.current.value = "";
+    setInput("");
+    console.log('send')
   };
 
   const handleEmojiClick = (emoji) => {
@@ -208,6 +208,18 @@ const Video = ({
     remoteStreamRef.current.muted = localStreamMuted; // true false
     setLocalStreamMuted(!localStreamMuted)
   };
+
+  useEffect(()=>{
+    if(!socket.current) return;
+    socket.current.on('receiveMessage',(data)=>{
+      const {type,msg} = data;
+      setMessages((prev) => [...prev, { msg:msg, type:type }]);
+      console.log('received')
+    })
+    return ()=>{
+      socket.current.off('receiveMessage')
+    }
+  },[])
   
 
   return (
@@ -414,8 +426,7 @@ const Video = ({
                   alignSelf: type === "receiver" ? "flex-start" : "flex-end",
                   width: "75%",
                   justifyContent:
-                    type === "receiver" ? "flex-start" : "flex-end",
-                  width: "75%",
+                  type === "receiver" ? "flex-start" : "flex-end",
                 }}
               >
                 <div
