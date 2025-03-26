@@ -426,7 +426,7 @@ const Video = ({
                   alignSelf: type === "receiver" ? "flex-start" : "flex-end",
                   width: "75%",
                   justifyContent:
-                  type === "receiver" ? "flex-start" : "flex-end",
+                    type === "receiver" ? "flex-start" : "flex-end",
                 }}
               >
                 <div

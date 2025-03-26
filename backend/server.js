@@ -7,7 +7,6 @@ dotenv.config();
 
 const PORT = process.env.PORT || 5000;
 const FRONTEND_URL = process.env.FRONTEND_URL || '*';
-// const FRONTEND_URL = "http://localhost:5173";
 
 const app = express();
 const server = createServer(app);
@@ -50,23 +49,26 @@ io.on("connection", (socket) => {
   });
 
   socket.on("answerCall", (data) => {
-    const [name,
-      createdAnswer,
-      remoteId,
-      myId,] = data;
+    const [name, createdAnswer, remoteId, myId] = data;
     socket.to(remoteId).emit("answerCall", data);
   });
 
   // for iceCandidate Exchange
-  socket.on('iceCandidate',(data)=>{
-    const [candidate,remoteId] = data;
-    socket.to(remoteId).emit('receiveCandidate',candidate)
-  })
+  socket.on("iceCandidate", (data) => {
+    const [candidate, remoteId] = data;
+    socket.to(remoteId).emit("receiveCandidate", candidate);
+  });
 
+  // for chat messaging
+  socket.on("sendMessage", (data) => {
+    const { remoteId, msg, type } = data;
+    console.log(data);
+    socket.to(remoteId).emit("receiveMessage", { msg: msg, type: "receiver" });
+  });
 
   socket.on("connectionEnd", ({ userLeftId }) => {
     const remoteId = ConnectedUsers.get(userLeftId);
-
+    console.log(userLeftId)
     if (remoteId) {
       socket.to(remoteId).emit("connectionEnd", "User left");
       ConnectedUsers.delete(userLeftId);
@@ -76,6 +78,7 @@ io.on("connection", (socket) => {
 
   socket.on("disconnect", () => {
     const remoteId = ConnectedUsers.get(socket.id);
+    // console.log('mai hoon na',socket.id)
     if (remoteId) {
       socket.to(remoteId).emit("connectionEnd", "User left");
       ConnectedUsers.delete(socket.id);

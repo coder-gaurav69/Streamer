@@ -13,6 +13,7 @@ import Login from "./Pages/Login/Login";
 import Features from "./Pages/Features/Features";
 import Safety from "./Pages/Safety/Safety";
 
+
 const App = () => {
   const [isZoomed, setIsZoomed] = useState(false);
   const [loginStatus,setLoginStatus] = useState(false);
@@ -33,6 +34,7 @@ const App = () => {
           </PeerProvider>
         </UserProvider>
       </SocketProvider>
+      
     </>
   );
 };

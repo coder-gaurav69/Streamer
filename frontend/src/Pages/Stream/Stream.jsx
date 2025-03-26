@@ -154,6 +154,11 @@ const Stream = ({ setIsZoomed, isZoomed }) => {
       remoteStreamRef.current.srcObject = null;
     }
 
+    // resetting remote information
+    setMyId(null);
+    setRemoteId(null);
+    setRemoteName(null);
+    
     // ✅ Reset Peer Connection
     initializePeerConnection();
 
