@@ -7,9 +7,10 @@ const UserContext = createContext(null);
 const UserProvider = ({ children }) => {
   const [name, setName] = useState(null);
   const [category, setCategory] = useState(null); // Add state for room
+  const [choice, setChoice] = useState(null); // Add state for room
 
   return (
-    <UserContext.Provider value={{name, setName, category, setCategory}}>
+    <UserContext.Provider value={{name, setName, category, setCategory,choice,setChoice}}>
       {children}
     </UserContext.Provider>
   );

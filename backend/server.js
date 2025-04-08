@@ -6,17 +6,22 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const PORT = process.env.PORT || 5000;
-const FRONTEND_URL = process.env.FRONTEND_URL || '*';
+const FRONTEND_URL = process.env.FRONTEND_URL || "*";
 
 const app = express();
 const server = createServer(app);
 
 app.use(cors({ origin: FRONTEND_URL }));
 
-const io = new Server(server, { cors: { origin: FRONTEND_URL } });
+const io = new Server(server, {
+  cors: {
+    origin: FRONTEND_URL,
+    methods: ["GET", "POST"],
+  },
+});
 
-const AvailableUsersQueue = []; // Queue for users waiting for a match
-const ConnectedUsers = new Map(); // Stores active connections
+const AvailableUsersQueue = [];
+const ConnectedUsers = new Map();
 
 const matchUsers = () => {
   while (AvailableUsersQueue.length >= 2) {
@@ -26,19 +31,26 @@ const matchUsers = () => {
     ConnectedUsers.set(user1.id, user2.id);
     ConnectedUsers.set(user2.id, user1.id);
 
-    io.to(user1.id).emit("remoteId", user2.id);
-    io.to(user2.id).emit("approach", [user1.name, user1.id, user2.id]);
+    if (user1.chooseType === "videoChat" && user2.chooseType === "videoChat") {
+      io.to(user1.id).emit("remoteId", user2.id);
+      io.to(user2.id).emit("approach", [user1.name, user1.id, user2.id]);
+    } else {
+      io.to(user1.id).emit("remoteId", user2.id);
+      io.to(user2.id).emit("connection", [user1.name, user1.id, user2.id]);
+    }
   }
 };
 
 io.on("connection", (socket) => {
+  let userData = null; // Save user-specific data
+
   socket.on("AnyUser", (data) => {
-    const [name] = data;
-    console.log(name);
+    const [name, category, choice] = data;
     socket.emit("myId", socket.id);
 
-    if (name) {
-      AvailableUsersQueue.push({ id: socket.id, name });
+    if (name && choice) {
+      userData = { id: socket.id, name, chooseType: choice };
+      AvailableUsersQueue.push(userData);
       matchUsers();
     }
   });
@@ -53,22 +65,18 @@ io.on("connection", (socket) => {
     socket.to(remoteId).emit("answerCall", data);
   });
 
-  // for iceCandidate Exchange
   socket.on("iceCandidate", (data) => {
     const [candidate, remoteId] = data;
     socket.to(remoteId).emit("receiveCandidate", candidate);
   });
 
-  // for chat messaging
   socket.on("sendMessage", (data) => {
     const { remoteId, msg, type } = data;
-    console.log(data);
-    socket.to(remoteId).emit("receiveMessage", { msg: msg, type: "receiver" });
+    socket.to(remoteId).emit("receiveMessage", { msg, type: "receiver" });
   });
 
   socket.on("connectionEnd", ({ userLeftId }) => {
     const remoteId = ConnectedUsers.get(userLeftId);
-    console.log(userLeftId)
     if (remoteId) {
       socket.to(remoteId).emit("connectionEnd", "User left");
       ConnectedUsers.delete(userLeftId);
@@ -78,19 +86,17 @@ io.on("connection", (socket) => {
 
   socket.on("disconnect", () => {
     const remoteId = ConnectedUsers.get(socket.id);
-    // console.log('mai hoon na',socket.id)
     if (remoteId) {
       socket.to(remoteId).emit("connectionEnd", "User left");
       ConnectedUsers.delete(socket.id);
       ConnectedUsers.delete(remoteId);
     }
-    AvailableUsersQueue.splice(
-      AvailableUsersQueue.findIndex((user) => user.id === socket.id),
-      1
-    );
+
+    const index = AvailableUsersQueue.findIndex((user) => user.id === socket.id);
+    if (index !== -1) AvailableUsersQueue.splice(index, 1);
   });
 });
 
 server.listen(PORT, () => {
-  console.log("Server is running on port 5000");
+  console.log(`Server is running on port ${PORT}`);
 });

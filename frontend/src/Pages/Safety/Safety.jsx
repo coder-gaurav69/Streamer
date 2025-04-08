@@ -9,7 +9,7 @@ const Safety = () => {
     <div
       style={{
         width: "100%",
-        minHeight: "100vh",
+        // minHeight: "100vh",
         backgroundImage: `linear-gradient(rgba(0,0,0,0.8),rgba(0,0,0,0.8)),url(${img7})`,
         backgroundAttachment: "fixed",
         backgroundSize: "cover",

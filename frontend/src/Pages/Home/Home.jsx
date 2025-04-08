@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useEffect } from "react";
 import "./Home.css";
 // import { SocketContext } from "../../Context/SocketContext";
 import { UserContext } from "../../Context/UserContext";
@@ -7,13 +7,21 @@ import img4 from "../../assets/img4.jpg";
 
 const Home = () => {
   const { name, setName } = useContext(UserContext);
-  const { category, setCategory } = useContext(UserContext);
+  const { category, setCategory,choice } = useContext(UserContext);
   const navigate = useNavigate();
 
   const handleSubmitBtn = (e) => {
     e.preventDefault();
-    navigate('/stream')
+    if(choice === 'chat'){
+      navigate('/chat')
+    }else{
+      navigate('/stream')
+    }
   };
+
+  useEffect(()=>{
+    console.log(choice)
+  },[choice])
 
   return (
     <div className="container"

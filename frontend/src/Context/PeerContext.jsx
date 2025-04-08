@@ -36,9 +36,8 @@ const PeerProvider = ({ children }) => {
             "turns:ss-turn1.xirsys.com:443?transport=tcp",
             "turns:ss-turn1.xirsys.com:5349?transport=tcp",
           ],
-          username:
-            "b6U4GfI9po7YxqwECcBIr-__RgWRGKwz43NEk2ZCPZ5TiQZQuT8k1HJ6NuA_HJRxAAAAAGfbB7RHYXVyYXYxNjAxMDQ=",
-          credential: "eaa1dcb8-04ec-11f0-bcfb-0242ac140004",
+          username:`${import.meta.env.VITE_USERNAME}`,
+          credential: `${import.meta.env.VITE_USERNAME}`,
         },
       ],
     });

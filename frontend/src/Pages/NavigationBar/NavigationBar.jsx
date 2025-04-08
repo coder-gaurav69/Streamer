@@ -1,9 +1,11 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import "./NavigationBar.css";
 import { Link } from "react-router-dom";
+import { UserContext } from "../../Context/UserContext";
 
 const NavigationBar = ({ setLoginStatus }) => {
   const [menuOpen, setMenuOpen] = useState(false);
+  const {setChoice} = useContext(UserContext);
 
   const toggleMenu = () => {
     setMenuOpen(!menuOpen);
@@ -38,7 +40,7 @@ const NavigationBar = ({ setLoginStatus }) => {
 
           <div className="child3">
             <Link to={"/login"} onClick={()=> setLoginStatus(true)}>Sign In</Link>
-            <Link to={"/"}>Start Chat</Link>
+            <Link to={"/user"} onClick={()=>setChoice('chat')}>Start Chat</Link>
           </div>
 
           {/* Mobile Menu Button */}
@@ -55,7 +57,7 @@ const NavigationBar = ({ setLoginStatus }) => {
           <Link to={"/feature"} onClick={toggleMenu}>Feature</Link>
           <Link to={"/safety"} onClick={toggleMenu}>Safety</Link>
           <Link to={"/login"} onClick={() => {()=>setLoginStatus(true)(); toggleMenu();}}>Sign In</Link>
-          <Link to={"/"} onClick={toggleMenu}>Start Chat</Link>
+          <Link to={"/user"} onClick={()=>{toggleMenu();setChoice('chat')}}>Start Chat</Link>
         </div>
       )}
     </>

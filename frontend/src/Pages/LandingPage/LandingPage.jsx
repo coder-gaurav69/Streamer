@@ -1,15 +1,19 @@
-import React from "react";
+import React, { useContext } from "react";
 import "./LandingPage.css";
 import img1 from "../../assets/img1.jpg";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Footer from "../Footer/Footer";
+import { UserContext } from "../../Context/UserContext";
 
 const LandingPage = () => {
+  const {setChoice} = useContext(UserContext);
+  const navigate = useNavigate();
+  
   return (
     <div
       style={{
         width: "100%",
-        minHeight: "100vh",
+        height:'fit-content',
         backgroundImage: `linear-gradient(rgba(0,0,0,0.8),rgba(0,0,0,0.8)),url(${img1})`,
         backgroundAttachment: "fixed",
         backgroundSize: "cover",
@@ -33,16 +37,12 @@ const LandingPage = () => {
               instant video chat.
             </p>
             <div className="btnOption">
-              <button>
-                <Link to="/user">
+              <button onClick={()=>{setChoice('videoChat');navigate('/user')}}>
                   <p>Start VideoChat</p>
-                </Link>
                 <i className="fa-solid fa-arrow-right"></i>
               </button>
-              <button>
-                <Link to="/user">
+              <button onClick={()=>{setChoice('chat');navigate('/user')}}>
                   <p>Start TextChat</p>
-                </Link>
                 <i className="fa-solid fa-arrow-right"></i>
               </button>
             </div>

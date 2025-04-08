@@ -6,7 +6,7 @@ import { PeerContext } from "../../Context/PeerContext";
 import Video from "./Video/Video";
 
 const Stream = ({ setIsZoomed, isZoomed }) => {
-  const { name, category } = useContext(UserContext);
+  const { name, category , choice } = useContext(UserContext);
   const socket = useContext(SocketContext);
   const {
     addingTrack,
@@ -28,6 +28,8 @@ const Stream = ({ setIsZoomed, isZoomed }) => {
   const [audio, setAudio] = useState(true);
   const [video, setVideo] = useState(true);
   const [findinguser, setFindinguser] = useState(true);
+  const [messages, setMessages] = useState([]);
+  const videoRef = useRef(null);
 
   const getLocalStream = async () => {
     try {
@@ -40,9 +42,10 @@ const Stream = ({ setIsZoomed, isZoomed }) => {
         },
       });
 
-      if (stream && localStreamRef.current) {
+      if (stream) {
         localStreamRef.current.srcObject = stream;
-        localStreamRef.current.muted = "true";
+        localStreamRef.current.muted = true;
+        videoRef.current = stream;
         await addingTrack(stream);
         setLocalStream(stream);
       }
@@ -93,7 +96,8 @@ const Stream = ({ setIsZoomed, isZoomed }) => {
   };
 
   const connectUser = () => {
-    socket.current.emit("AnyUser", [name, category]);
+    setMessages([])
+    socket.current.emit("AnyUser", [name, category , choice]);
 
     // ✅ Remove previous event listeners to prevent duplicates
     socket.current.off("myId");
@@ -111,6 +115,7 @@ const Stream = ({ setIsZoomed, isZoomed }) => {
     socket.current.on("answerCall", accept);
 
     socket.current.on("connectionEnd", (msg) => {
+      setMessages([]);
       if (remoteStreamRef.current) {
         remoteStreamRef.current.srcObject = null;
         handleDisconnection();
@@ -119,28 +124,25 @@ const Stream = ({ setIsZoomed, isZoomed }) => {
   };
 
   useEffect(() => {
+    console.log('mouting')
     getLocalStream();
-
+  
     return () => {
-      if (socket.current) {
-        socket.current.off("finding_users");
-        socket.current.off("approach");
-        socket.current.off("call");
-        socket.current.off("answerCall");
-        socket.current.off("connectionEnd");
+  
+      if (videoRef.current) {
+        console.log("UNMOUNTING Stream...");
+        videoRef.current.getTracks().forEach((track) => track.stop());
       }
-      if (remoteStreamRef.current?.srcObject) {
-        remoteStreamRef.current.srcObject.getTracks().forEach((track) => track.stop());
-        remoteStreamRef.current.srcObject = null;
-      }
+  
     };
   }, []);
+  
 
   const handleDisconnection = async () => {
     console.log("Disconnected");
 
     // ✅ Notify the server about disconnection
-    socket.current.emit("connectionEnd", { userLeftId: myId, msg: "User left" });
+    // socket.current.emit("connectionEnd", { userLeftId: myId, msg: "User left" });
 
     // ✅ Stop all tracks in local stream
     if (localStream) {
@@ -158,6 +160,7 @@ const Stream = ({ setIsZoomed, isZoomed }) => {
     setMyId(null);
     setRemoteId(null);
     setRemoteName(null);
+    setMessages([])
     
     // ✅ Reset Peer Connection
     initializePeerConnection();
@@ -174,6 +177,7 @@ const Stream = ({ setIsZoomed, isZoomed }) => {
       console.log("connected");
       setToggler(false);
     } else {
+      socket.current.emit("connectionEnd", { userLeftId: myId, msg: "User left" });
       handleDisconnection();
     }
   };
@@ -197,6 +201,8 @@ const Stream = ({ setIsZoomed, isZoomed }) => {
         audio={audio}
         toggleVideoIcon={toggleVideoIcon}
         toggleAudioIcon={toggleAudioIcon}
+        messages={messages}
+        setMessages={setMessages}
       />
     </>
   );

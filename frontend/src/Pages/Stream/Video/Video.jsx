@@ -22,6 +22,8 @@ const Video = ({
   setVideo,
   toggleVideoIcon,
   toggleAudioIcon,
+  messages,
+  setMessages
 }) => {
   const socket = useContext(SocketContext);
   const parentRef = useRef(null);
@@ -33,7 +35,6 @@ const Video = ({
   const [position, setPosition] = useState({ left: 10, top: 10 });
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [iconsPos, setIconPos] = useState({ left: 10, top: 10 });
-  const [messages, setMessages] = useState([]);
   const inputField = useRef(null);
   const [showPicker, setShowPicker] = useState(false);
   const [input, setInput] = useState("");
@@ -41,6 +42,8 @@ const Video = ({
   const [screenSize, setScreenSize] = useState(window.innerWidth);
   const [toggleStream,setToggleStream] = useState(false)
   const [localStreamMuted,setLocalStreamMuted] = useState(true)
+  const [image , setImage] = useState(null)
+  const canvasChildRef = useRef();
 
   const Zoomed = () => {
     setIsZoomed(!isZoomed);
@@ -172,21 +175,28 @@ const Video = ({
   }, []);
 
   useEffect(() => {
-    if (!parentRef.current || !childRef.current) return;
+    const parentElement = parentRef.current;
+    const childElement = childRef.current;
+  
+    if (!parentElement || !childElement) return;
+  
     const resizeObserver = new ResizeObserver(() => {
+      if (!parentRef.current || !childRef.current) return; // Additional safeguard
       const parentRect = parentRef.current.getBoundingClientRect();
       const childRect = childRef.current.getBoundingClientRect();
-
+  
       setPosition({
         left: parentRect.width - childRect.width - 10,
         top: parentRect.height - childRect.height - (isZoomed ? 90 : 10),
       });
-
-      setIconPos({ left: 10, top: 10 }); // Keep icon within bounds
+  
+      setIconPos({ left: 10, top: 10 });
     });
-
-    resizeObserver.observe(parentRef.current);
-    return () => resizeObserver.disconnect();
+  
+    resizeObserver.observe(parentElement);
+    return () => {
+      resizeObserver.disconnect();
+    };
   }, [isZoomed]);
 
   useEffect(() => {
@@ -220,7 +230,26 @@ const Video = ({
       socket.current.off('receiveMessage')
     }
   },[])
-  
+
+  // to capture local stream current frame
+  const captureFrame = ()=>{
+    const video = localStreamRef.current;
+    const canvas = canvasChildRef.current;
+
+    if(canvas && video){
+      console.log('capturing...')
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video,0,0,canvas.width, canvas.height);
+      const imageData = canvas.toDataURL('image/png');
+      setImage(imageData);
+    }
+  }
+
+
+
 
   return (
     <div
@@ -330,7 +359,13 @@ const Video = ({
                   display:!video?'none':''
                 }}
               ></video>
-              <i className="fa-solid fa-expand" onClick={switchStream} onTouchStart={switchStream}></i>
+              <canvas ref={canvasChildRef} style={{display:'none'}}></canvas>
+              <img className="captureImage" src={image} alt="Captured" style={{
+                  display:video?'none':'',
+              }}/>
+              <i className="fa-solid fa-expand" onClick={switchStream} onTouchStart={switchStream} style={{
+                display:!video?'none':''
+              }}></i>
             </div>
             <div
               className="zoomIcon"
@@ -362,7 +397,7 @@ const Video = ({
               position: isZoomed ? "absolute" : "relative",
               bottom: isZoomed ? "0" : "",
               borderRadius: isZoomed ? "0" : "",
-              backgroundColor: isZoomed ? "rgba(255,255,255,0.01)" : "",
+              backgroundColor: isZoomed ? "transparent" : "",
             }}
           >
             <div
@@ -388,10 +423,12 @@ const Video = ({
               onClick={() => {
                 setVideo(!video);
                 toggleVideoIcon();
+                video && captureFrame();
               }}
               onTouchStart={() => {
                 setVideo(!video);
                 toggleVideoIcon();
+                video && captureFrame();
               }}
             >
               {video ? (
@@ -502,3 +539,6 @@ const Video = ({
 };
 
 export default Video;
+
+
+

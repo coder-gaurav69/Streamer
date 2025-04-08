@@ -1,0 +1,222 @@
+.chatContainer{
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    flex-direction:column;
+    background-color:whitesmoke;
+
+}
+.chatContainer-child1{
+    width: 100%;
+    margin: 90px  0 0 0;
+    padding:0 18%;
+    height:70px;
+    background-color:#ffffff;
+    display: flex;
+    align-items: center;
+    justify-content:space-between;
+    flex-shrink: 0;
+    box-shadow: 0 1px 1px rgba(0,0,0,0.2);
+}
+
+.chatContainer-child1>.chatContainer-child1-1{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap:30px;
+}
+
+.chatContainer-child1>.chatContainer-child1-1>:first-child{
+    padding:10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color:rgba(0,0,255,0.2);
+    border-radius: 50%;
+    font-size:20px;
+}
+
+.chatContainer-child1>.chatContainer-child1-1>:last-child>p{
+    color: rgb(46, 197, 46);
+}
+
+
+.chatContainer-child1>.chatContainer-child1-2{
+    padding:10px 20px;
+    border: none;
+    outline: none;
+    border-radius:50px;
+    font-size:16px;
+    font-weight: 500;
+    transition:0.5s;
+}
+
+.blue{
+    color: white;
+    background-color: rgb(69,60,240);
+}
+.red{
+    color:rgba(255,0,0,0.5);
+    background-color: rgba(130, 69, 69, 0.3);
+}
+
+.chatContainer-child1>.red:hover{
+    background-color: rgba(185, 46, 46, 0.5);
+}
+.chatContainer-child1>.blue:hover{
+    background-color: rgb(79,70,229);
+}
+
+
+
+.chatContainer-child2{
+    width: 100%;
+    padding:20px 18%;
+    background-color:rgb(249,250,251);
+    flex-grow: 1;
+    display: flex;
+    align-items:start;
+    gap: 10px;
+    flex-direction: column;
+    overflow-y: scroll;
+    box-shadow:inset 0px 1px 1px rgba(0,0,0,0.2);
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+
+.chatContainer-child3{
+    width: 100%;
+    margin:auto;
+    height: 80px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap:20px;
+    padding:0 20px;
+    background-color: #ffffff;
+    box-shadow:inset 0px 1px 1px rgba(0,0,0,0.2);
+}
+
+.chatContainer-child3>input{
+    width:80%;
+    height:40px;
+    border-radius:30px;
+    outline: none;
+    border: none;
+    padding:0 2%;
+    font-size:20px;
+    color: rgba(0,0,0,0.5);
+    background-color: rgb(249,250,251);
+    border:solid 1px rgba(0,0,0,0.2);
+}
+
+
+
+.chatContainer-child3>button{
+    height:40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding:0px 30px ;
+    border-radius:50px;
+    outline: none;
+    border: none;
+    font-size:18px;
+    gap:15px;
+    background-color:rgb(79,70,229);
+    color: whitesmoke;
+}
+.chatContainer-child3>button{
+    background-color:rgb(69,60,240)
+}
+
+.chatContainer-child3>button>i{
+    font-size:22px;
+}
+
+.chatContainer-child3>button>p{
+    font-weight: 400;
+}
+
+.emojiBtn{
+    width:40px;
+    height: 40px;
+    flex-shrink: 0;
+    background-color:rgb(69,60,240);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius:50%;
+    font-size:20px;
+    color: white;
+}
+
+
+@media screen and (max-width:1130px) {
+    .chatContainer>.chatContainer-child1  {
+        padding:0 2%;
+        width: 100%;
+    }
+
+    .chatContainer>.chatContainer-child2{
+        padding: 5%;
+    }
+
+    .chatContainer-child3{
+        padding:10px;
+        justify-content: space-between;
+    }
+}
+@media screen and (max-width:500px) {
+    .chatContainer>.chatContainer-child1 {
+        height:80px;
+    }
+    .chatContainer-child1>.chatContainer-child1-1>:first-child {
+        font-size:18px;
+    }
+    .chatContainer-child1>.chatContainer-child1-1>:last-child>h2{
+        font-size:18px;
+    }
+
+    .chatContainer-child1>.chatContainer-child1-1 {
+        gap: 15px;
+    }
+
+    .chatContainer-child1>.chatContainer-child1-2{
+        padding:10px 20px;
+        font-size:15px;
+    }
+
+    .chatContainer-child2 {
+        width:100%;
+        padding:15px;
+    }
+
+    .chatContainer-child3{
+        padding:10px;
+    }
+
+    .chatContainer-child3>button{
+        padding:10px 15px;
+        font-size:15px;
+        gap:5px;
+        height:40px;
+    }
+    
+    .chatContainer-child3>button>i{
+        /* padding:10px; */
+        font-size:15px;
+    }
+
+    .chatContainer-child3>input{
+        padding:0 20px;
+        height:40px;
+    }
+
+    .emojiBtn{
+        display: none;
+    }
+    
+}

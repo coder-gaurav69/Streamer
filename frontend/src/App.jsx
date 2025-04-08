@@ -12,6 +12,7 @@ import NavigationBar from "./Pages/NavigationBar/NavigationBar";
 import Login from "./Pages/Login/Login";
 import Features from "./Pages/Features/Features";
 import Safety from "./Pages/Safety/Safety";
+import Chat from "./Pages/Chat/Chat";
 
 
 const App = () => {
@@ -30,14 +31,20 @@ const App = () => {
               <Route path="/stream" element={<Stream setIsZoomed={setIsZoomed} isZoomed={isZoomed}/>}/>
               <Route path="/Safety" element={<Safety />} />
               <Route path="/login" element={<Login />} />
+              <Route path="/chat" element={<Chat/>} />
             </Routes>
           </PeerProvider>
         </UserProvider>
       </SocketProvider>
+      
       
     </>
   );
 };
 
 export default App;
+
+
+
+
 
