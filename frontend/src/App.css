@@ -1,5 +1,4 @@
-*{
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+
+/* Place this in `index.css` or as global for full animation */
+@keyframes waveMotion { 0%,100%{transform:translateY(-4px);}50%{transform:translateY(4px);} }
+                

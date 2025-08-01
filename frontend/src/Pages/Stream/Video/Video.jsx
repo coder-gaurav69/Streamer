@@ -1,8 +1,16 @@
-import React, { useRef, useState, useEffect,useContext } from "react";
-import "./Video.css";
+import React, { useRef, useState, useEffect, useContext } from "react";
 import img5 from "../../../assets/img5.jpg";
 import EmojiPicker from "emoji-picker-react";
 import { SocketContext } from "../../../Context/SocketContext";
+
+// Tweak colors here only if you want (leave as in your source CSS)
+const videoBg = "rgba(0,0,0,0.05)";
+const chatSenderBg = "rgba(23,172,70,0.1)";
+const chatRecvBg = "rgba(238,231,231,0.2)";
+const micOnBg = "rgba(0,255,0,0.3)";
+const micOffBg = "rgba(255,0,0,0.3)";
+const btnShadowOn = "2px 2px rgba(0,180,0,0.3)";
+const btnShadowOff = "2px 2px rgba(180,0,0,0.3)";
 
 const Video = ({
   setIsZoomed,
@@ -23,7 +31,7 @@ const Video = ({
   toggleVideoIcon,
   toggleAudioIcon,
   messages,
-  setMessages
+  setMessages,
 }) => {
   const socket = useContext(SocketContext);
   const parentRef = useRef(null);
@@ -40,9 +48,8 @@ const Video = ({
   const [input, setInput] = useState("");
   const chatEndRef = useRef(null);
   const [screenSize, setScreenSize] = useState(window.innerWidth);
-  const [toggleStream,setToggleStream] = useState(false)
-  const [localStreamMuted,setLocalStreamMuted] = useState(true)
-  const [image , setImage] = useState(null)
+  const [localStreamMuted, setLocalStreamMuted] = useState(true);
+  const [image, setImage] = useState(null);
   const canvasChildRef = useRef();
 
   const Zoomed = () => {
@@ -61,7 +68,7 @@ const Video = ({
       y: event.clientY - childRect.top,
     });
 
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
   };
 
   const handleMouseMove = (e) => {
@@ -87,7 +94,7 @@ const Video = ({
       )
     );
     setPosition({ left: newX, top: newY });
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
   };
 
   const handleMouseUp = (e) => {
@@ -139,16 +146,17 @@ const Video = ({
   const sendMessage = () => {
     if (input.trim() === "") return;
     setMessages((prev) => [...prev, { msg: input, type: "sender" }]);
-    socket.current.emit('sendMessage',{remoteId:remoteId,msg:input,type:'sender'})
-    inputField.current.value = "";
+    socket.current.emit("sendMessage", {
+      remoteId: remoteId,
+      msg: input,
+      type: "sender",
+    });
     setInput("");
-    console.log('send')
+    console.log("sent");
   };
 
   const handleEmojiClick = (emoji) => {
     setInput((prev) => prev + emoji.emoji);
-    inputField.current.value = input + emoji.emoji; 
-    inputField.current.scrollLeft = inputField.current.scrollWidth;
   };
 
   useEffect(() => {
@@ -177,22 +185,24 @@ const Video = ({
   useEffect(() => {
     const parentElement = parentRef.current;
     const childElement = childRef.current;
-  
+
     if (!parentElement || !childElement) return;
-  
+
+    if (!window.ResizeObserver) return; // Defensive: skip if unsupported
+
     const resizeObserver = new ResizeObserver(() => {
       if (!parentRef.current || !childRef.current) return; // Additional safeguard
       const parentRect = parentRef.current.getBoundingClientRect();
       const childRect = childRef.current.getBoundingClientRect();
-  
+
       setPosition({
         left: parentRect.width - childRect.width - 10,
         top: parentRect.height - childRect.height - (isZoomed ? 90 : 10),
       });
-  
+
       setIconPos({ left: 10, top: 10 });
     });
-  
+
     resizeObserver.observe(parentElement);
     return () => {
       resizeObserver.disconnect();
@@ -200,213 +210,279 @@ const Video = ({
   }, [isZoomed]);
 
   useEffect(() => {
-    window.addEventListener("resize", () => {
-      setScreenSize(window.innerWidth);
-    });
+    const handleResize = () => setScreenSize(window.innerWidth);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   const switchStream = () => {
     if (!localStreamRef.current || !remoteStreamRef.current) return;
-  
+
     // Swap the actual stream objects
-    const localStream = localStreamRef.current.srcObject; //mine other
-    const remoteStream = remoteStreamRef.current.srcObject; // other mine
-  
-    localStreamRef.current.srcObject = remoteStream; //other mine
-    localStreamRef.current.muted = !localStreamMuted; // false true
-    remoteStreamRef.current.srcObject = localStream; // mine other
-    remoteStreamRef.current.muted = localStreamMuted; // true false
-    setLocalStreamMuted(!localStreamMuted)
+    const localStream = localStreamRef.current.srcObject;
+    const remoteStream = remoteStreamRef.current.srcObject;
+
+    localStreamRef.current.srcObject = remoteStream;
+    localStreamRef.current.muted = !localStreamMuted;
+    remoteStreamRef.current.srcObject = localStream;
+    remoteStreamRef.current.muted = localStreamMuted;
+    setLocalStreamMuted(!localStreamMuted);
   };
 
-  useEffect(()=>{
-    if(!socket.current) return;
-    socket.current.on('receiveMessage',(data)=>{
-      const {type,msg} = data;
-      setMessages((prev) => [...prev, { msg:msg, type:type }]);
-      console.log('received')
-    })
-    return ()=>{
-      socket.current.off('receiveMessage')
-    }
-  },[])
+  useEffect(() => {
+    if (!socket.current) return;
+    const handler = (data) => {
+      const { type, msg } = data;
+      setMessages((prev) => [...prev, { msg: msg, type: type }]);
+      console.log("received");
+    };
+    socket.current.on("receiveMessage", handler);
+    return () => {
+      if (socket.current) socket.current.off("receiveMessage", handler);
+    };
+  }, [socket]);
 
   // to capture local stream current frame
-  const captureFrame = ()=>{
-    const video = localStreamRef.current;
-    const canvas = canvasChildRef.current;
+  const captureFrame = () => {
+    const video = localStreamRef?.current;
+    const canvas = canvasChildRef?.current;
 
-    if(canvas && video){
-      console.log('capturing...')
+    if (canvas && video) {
+      console.log("capturing...");
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
 
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(video,0,0,canvas.width, canvas.height);
-      const imageData = canvas.toDataURL('image/png');
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const imageData = canvas.toDataURL("image/png");
       setImage(imageData);
     }
-  }
+  };
 
-
-
+  // Responsive "my stream" video sizes
+  const myVidWidth = screenSize < 500 ? 100 : screenSize < 925 ? 150 : 180;
+  const myVidHeight = screenSize < 500 ? 150 : screenSize < 925 ? 110 : 120;
 
   return (
     <div
-      className="main"
+      className="w-full min-h-screen flex flex-col justify-center items-center"
       style={{
-        width: "100%",
-        minHeight: "100vh",
-        display: "flex",
-        flexDirection: "column",
-        padding: !isZoomed ? "72px 0 0 0" : "0",
-        justifyContent: "center",
-        alignItems: "center",
         backgroundImage: `linear-gradient(rgba(0,0,0,0.8),rgba(0,0,0,0.8)),url(${img5})`,
         backgroundAttachment: "fixed",
         backgroundSize: "cover",
         backgroundPosition: "center",
-        // gap:'20px'
+        paddingTop: !isZoomed ? "72px" : "0",
       }}
       onMouseMove={handleMouseMove}
       onTouchMove={handleMouseMove}
       onMouseUp={handleMouseUp}
       onTouchEnd={handleMouseUp}
     >
-      {/* selection of text and video part for smaller screen*/}
+      {/* Tabs for mobile */}
       {!isZoomed && (
-        <div className="selectionPart">
-          <div className="selectionDiv">
+        <div
+          className={`w-full flex justify-center items-center my-[10px] ${
+            screenSize < 925 ? "" : "hidden"
+          }`}
+        >
+          <div className="w-[90%] flex items-center justify-center gap-[20px] bg-white/20 p-[5px] rounded-[10px]">
             <div
-              className="selectionDiv-child"
-              style={{
-                backgroundColor: !toggleSelect
-                  ? "rgba(255, 255, 255, 0.5)"
-                  : "",
-              }}
+              className={`w-1/2 flex items-center justify-center p-[10px] rounded-[10px] cursor-pointer text-base font-semibold
+                ${!toggleSelect ? "bg-white/50" : ""}`}
               onClick={() => setToggleSelect(false)}
-              onTouchStart={() => setToggleSelect(false)}
             >
-              <h3>Video</h3>
+              Video
             </div>
-
             <div
-              className="selectionDiv-child"
-              style={{
-                backgroundColor: toggleSelect ? "rgba(255, 255, 255, 0.5)" : "",
-              }}
+              className={`w-1/2 flex items-center justify-center p-[10px] rounded-[10px] cursor-pointer text-base font-semibold
+                ${toggleSelect ? "bg-white/50" : ""}`}
               onClick={() => setToggleSelect(true)}
-              onTouchStart={() => setToggleSelect(true)}
             >
-              <h3>Chat</h3>
+              Chat
             </div>
           </div>
         </div>
       )}
 
+      {/* Main container for video/chat panels */}
       <div
-        className="mainContainer"
+        className="flex w-[90%] gap-[2%] items-end text-[wheat]"
         style={{
           width: isZoomed ? "100%" : "",
           height: isZoomed ? "100vh" : "",
           padding: isZoomed ? "0" : "",
         }}
       >
-        {/* videoContainer */}
+        {/* --- VIDEO PANEL --- */}
         <div
-          className="videoContainer"
+          className={`flex flex-col items-center justify-center relative rounded-[20px] shadow-lg w-[100%] h-[485px] gap-[2px]`}
           style={{
+            background: videoBg,
+            display: screenSize < 925 && toggleSelect ? "none" : "flex",
             width: isZoomed ? "100%" : "",
             height: isZoomed ? "100vh" : "",
-            bottom: isZoomed ? "0px" : "",
-            display: screenSize < 925 && toggleSelect ? "none" : "flex",
           }}
         >
+          {/* Video area */}
           <div
-            className="video"
+            className="w-full h-[400px] flex items-center justify-center relative rounded-t-[20px] transition-all"
             style={{
-              height: isZoomed ? "100vh" : "",
               position: isZoomed ? "absolute" : "relative",
-              borderRadius: isZoomed ? "0" : "",
+              height: isZoomed ? "100vh" : "",
+              borderRadius: isZoomed ? "0" : "20px 20px 0 0",
+              backdropFilter: "blur(10px)",
+              backgroundColor: "rgba(0,0,0,0.5)",
+              boxShadow:
+                "5px 5px 5px rgba(0,0,0,0.5), inset 5px 5px 100px rgba(0,0,0,1)",
+              transition: "0.3s all",
             }}
             ref={parentRef}
           >
+            {/* Zoom Icon */}
+            <div
+              className="absolute z-10"
+              onClick={() => setIsZoomed(!isZoomed)}
+              style={{
+                top: `${iconsPos.top}px`,
+                left: `${iconsPos.left}px`,
+                color: "rgba(255,255,255,0.6)",
+              }}
+            >
+              <i
+                className="fa-solid fa-expand"
+                style={{ fontSize: 30, transition: ".3s", padding: 5 }}
+              ></i>
+            </div>
+            {/* Remote video */}
             <video
-              className="remoteStream"
+              className="w-full h-full object-cover object-center rounded-t-[10px] transition-all"
               ref={remoteStreamRef}
               autoPlay
               playsInline
             ></video>
 
+
+            {/* MY STREAM draggable window */}
             <div
-              className="mystream"
-              style={{
-                position: "absolute",
-                top: `${position.top}px`,
-                left: `${position.left}px`,
-                cursor: isDragging ? "grabbing" : "grab",
-              }}
+              className="absolute"
               ref={childRef}
               onMouseDown={handleMouseDown}
               onTouchStart={handleMouseDown}
+              style={{
+                top: `${position.top}px`,
+                left: `${position.left}px`,
+                cursor: isDragging ? "grabbing" : "grab",
+                width: myVidWidth,
+                height: myVidHeight,
+                background: "rgba(255,255,255,0.4)",
+                borderRadius: 20,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 20,
+                backdropFilter: "blur(20px)",
+                zIndex: 2,
+              }}
             >
+              <i
+                className="fa-solid fa-expand  right-2 bottom-2 "
+                style={{
+                  color: "rgba(0,0,0,0.2)",
+                  zIndex: 1,
+                  padding: 10,
+                  cursor: "pointer",
+                  display: !video ? "none" : undefined,
+                }}
+                onClick={switchStream}
+              ></i>
+              
               <video
-                className="localStream"
+                className="absolute w-full h-full rounded-[20px] object-cover object-center"
                 ref={localStreamRef}
                 autoPlay
                 playsInline
+                style={{ display: !video ? "none" : "" }}
+              />
+              <canvas ref={canvasChildRef} style={{ display: "none" }} />
+              <img
+                className="rounded-[20px]"
+                src={image}
+                alt="Captured"
                 style={{
-                  display:!video?'none':''
+                  display: video ? "none" : "",
+                  width: "100%",
+                  height: "100%",
+                  filter: "blur(2px)",
                 }}
-              ></video>
-              <canvas ref={canvasChildRef} style={{display:'none'}}></canvas>
-              <img className="captureImage" src={image} alt="Captured" style={{
-                  display:video?'none':'',
-              }}/>
-              <i className="fa-solid fa-expand" onClick={switchStream} onTouchStart={switchStream} style={{
-                display:!video?'none':''
-              }}></i>
+              />
             </div>
-            <div
-              className="zoomIcon"
-              onClick={Zoomed}
-              onTouchStart={Zoomed}
-              style={{
-                position: "absolute",
-                top: `${iconsPos.top}px`,
-                left: `${iconsPos.left}px`,
-              }}
-            >
-              <i className="fa-solid fa-expand"></i>
-            </div>
+            
+
+            {/* Waiting/joining status */}
             {findinguser && (
-              <div className="waiting">
-                <h3>Waiting for Someone to Join</h3>
-                <div className="ballContainer">
-                  <div className="balls"></div>
-                  <div className="balls"></div>
-                  <div className="balls"></div>
+              <div
+                className="flex flex-col items-center justify-center absolute gap-[10px] left-0 right-0 top-0 bottom-0"
+                style={{
+                  color: "rgba(255,255,255,0.6)",
+                  backgroundColor: "rgba(0,0,0,0.4)",
+                  borderRadius: 20,
+                }}
+              >
+                <h3 className="text-center p-[5px]">
+                  Waiting for Someone to Join
+                </h3>
+                <div
+                  className="flex gap-[10px] w-[150px] h-[40px] rounded-[30px] items-center justify-center"
+                  style={{ backgroundColor: "rgba(255,255,255,0.05)" }}
+                >
+                  <div
+                    className="w-[18px] h-[18px] rounded-full"
+                    style={{
+                      background: "blue",
+                      animation: "waveMotion 1.5s ease-in-out infinite",
+                      animationDelay: "0s",
+                    }}
+                  ></div>
+                  <div
+                    className="w-[18px] h-[18px] rounded-full"
+                    style={{
+                      background: "purple",
+                      animation: "waveMotion 1.5s ease-in-out infinite",
+                      animationDelay: ".3s",
+                    }}
+                  ></div>
+                  <div
+                    className="w-[18px] h-[18px] rounded-full"
+                    style={{
+                      background: "green",
+                      animation: "waveMotion 1.5s ease-in-out infinite",
+                      animationDelay: ".5s",
+                    }}
+                  ></div>
                 </div>
               </div>
             )}
           </div>
-
+          {/* Button group */}
           <div
-            className="btndiv"
+            className="w-full h-[80px] flex gap-[50px] items-center justify-center transition-all"
             style={{
-              position: isZoomed ? "absolute" : "relative",
-              bottom: isZoomed ? "0" : "",
-              borderRadius: isZoomed ? "0" : "",
-              backgroundColor: isZoomed ? "transparent" : "",
+              borderRadius: isZoomed ? 0 : "0 0 20px 20px",
+              backgroundColor: isZoomed ? "transparent" : "rgba(0,0,0,0.5)",
+              boxShadow: "5px 5px 5px rgba(0,0,0,0.5)",
+              transition: ".3s all",
+              position:isZoomed?"absolute":"relative",
+              bottom:isZoomed?"0":""
             }}
           >
+            {/* MIC */}
             <div
-              className={`icons ${audio?'audio_on':'audio_off'}`}
-              onClick={() => {
-                setAudio(!audio);
-                toggleAudioIcon();
+              className={`flex items-center justify-center rounded-[10px] w-[40px] p-[10px] text-[20px] cursor-pointer`}
+              style={{
+                backgroundColor: audio ? micOnBg : micOffBg,
+                boxShadow: audio ? btnShadowOn : btnShadowOff,
               }}
-              onTouchStart={() => {
+              onClick={() => {
                 setAudio(!audio);
                 toggleAudioIcon();
               }}
@@ -417,15 +493,14 @@ const Video = ({
                 <i className="fa-solid fa-microphone-slash"></i>
               )}
             </div>
-
+            {/* VIDEO */}
             <div
-              className={`icons ${video?'video_on':'video_off'}`}
-              onClick={() => {
-                setVideo(!video);
-                toggleVideoIcon();
-                video && captureFrame();
+              className={`flex items-center justify-center rounded-[10px] w-[40px] p-[10px] text-[20px] cursor-pointer`}
+              style={{
+                backgroundColor: video ? micOnBg : micOffBg,
+                boxShadow: video ? btnShadowOn : btnShadowOff,
               }}
-              onTouchStart={() => {
+              onClick={() => {
                 setVideo(!video);
                 toggleVideoIcon();
                 video && captureFrame();
@@ -437,54 +512,62 @@ const Video = ({
                 <i className="fa-solid fa-video-slash"></i>
               )}
             </div>
-
-            <div className="icons next" onClick={handleBtn} onTouchStart={handleBtn}
+            {/* NEXT */}
+            <div
+              className="flex items-center justify-center rounded-[10px] w-[40px] p-[10px] text-[20px] cursor-pointer"
+              style={{ backgroundColor: micOnBg, boxShadow: btnShadowOn }}
+              onClick={handleBtn}
             >
               <i className="fa-solid fa-forward"></i>
             </div>
           </div>
         </div>
 
-        {/* messageContainer */}
+        {/* --- CHAT PANEL --- */}
         <div
-          className="messageContainer"
+          className="flex flex-col bg-black/10 rounded-[20px] h-[485px] relative"
           style={{
             display:
               (screenSize < 925 && !toggleSelect) || isZoomed ? "none" : "flex",
+            width: screenSize < 925 ? "100%" : "40%",
           }}
         >
-          <div className="logo">Chat Messages</div>
-          <div className="messageBox">
+          {/* HEADER */}
+          <div
+            className="w-full h-[50px] flex items-center font-bold text-[24px] justify-center rounded-t-[20px]"
+            style={{
+              background: "rgba(0,0,0,0.5)",
+              color: "rgba(255,255,255,0.7)",
+            }}
+          >
+            Chat Messages
+          </div>
+          {/* CHAT LOG */}
+          <div
+            className="flex-1 w-full p-[10px] flex flex-col gap-[5px] overflow-y-auto"
+            style={{ fontSize: 20, backdropFilter: "blur(20px)" }}
+          >
             {messages.map(({ msg, type }, index) => (
               <div
-                className="chat"
                 key={index}
+                className={`flex w-full items-center font-[18px] ${
+                  type === "receiver" ? "justify-start" : "justify-end"
+                }`}
                 style={{
-                  alignSelf: type === "receiver" ? "flex-start" : "flex-end",
-                  width: "75%",
+                  width: "100%",
                   justifyContent:
                     type === "receiver" ? "flex-start" : "flex-end",
                 }}
               >
                 <div
-                  className="msgboxchild"
-                  style={{
-                    // width: "100%",
-                    display: "flex",
-                    alignItems: "center",
-                    textAlign: type == "receiver" ? "start" : "end",
-                    gap: "10px",
-                    padding: "5px",
-                    fontSize: "18px",
-                  }}
+                  className="flex items-center gap-[10px] p-[5px]"
+                  style={{ textAlign: type == "receiver" ? "start" : "end" }}
                 >
                   <div
-                    className="chatmessage"
+                    className="min-w-[60px] px-[10px] py-[8px] rounded-md text-center"
                     style={{
                       backgroundColor:
-                        type === "receiver"
-                          ? "rgba(238, 231, 231, 0.2)"
-                          : "rgba(23, 172, 70, 0.1)",
+                        type === "receiver" ? chatRecvBg : chatSenderBg,
                     }}
                   >
                     {msg}
@@ -494,27 +577,31 @@ const Video = ({
             ))}
             <div ref={chatEndRef} />
           </div>
-
-          {/* Emoji Picker - Clicking outside hides it */}
+          {/* Emoji Picker */}
           {showPicker && (
             <div
               ref={emojiPickerRef}
-              style={{
-                position: "absolute",
-                bottom: "20px",
-                left: "-10px",
-                transform: "scale(0.8)",
-              }}
+              className="absolute"
+              style={{ bottom: 20, left: -10, transform: "scale(0.8)" }}
             >
               <EmojiPicker onEmojiClick={handleEmojiClick} />
             </div>
           )}
-
-          {/* Input Field */}
-          <div className="inputField">
+          {/* INPUT ROW */}
+          <div
+            className="w-full h-[60px] flex items-center justify-center gap-[10px] px-[20px] rounded-b-[20px]"
+            style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+          >
             <button
               ref={emojiBtnRef}
-              className="emojiBtn"
+              type="button"
+              className="p-[10px] rounded-[10px]"
+              style={{
+                fontSize: 15,
+                backgroundColor: micOnBg,
+                color: "rgba(255,255,255,0.7)",
+                boxShadow: btnShadowOn,
+              }}
               onClick={() => setShowPicker(!showPicker)}
             >
               <i className="fa-solid fa-face-smile"></i>
@@ -522,13 +609,30 @@ const Video = ({
             <input
               ref={inputField}
               type="text"
+              className="flex-1 outline-none border-none px-[20px] py-[5px] md:max-w-[90%] max-w-[70%] rounded-full"
+              style={{
+                color: "rgba(255,255,255,0.5)",
+                backgroundColor: "rgba(255,255,255,0.1)",
+                fontSize: 18,
+              }}
               placeholder="type your message"
+              value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter") sendMessage();
               }}
             />
-            <button className="sendBtn" onClick={sendMessage}>
+            <button
+              className="p-[10px] rounded-[10px]"
+              type="button"
+              style={{
+                fontSize: 15,
+                backgroundColor: micOnBg,
+                color: "rgba(255,255,255,0.7)",
+                boxShadow: btnShadowOn,
+              }}
+              onClick={sendMessage}
+            >
               <i className="fa-solid fa-paper-plane"></i>
             </button>
           </div>
@@ -539,6 +643,3 @@ const Video = ({
 };
 
 export default Video;
-
-
-

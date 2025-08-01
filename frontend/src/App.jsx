@@ -7,8 +7,7 @@ import { UserProvider } from "./Context/UserContext";
 import { PeerProvider } from "./Context/PeerContext";
 import LandingPage from "./Pages/LandingPage/LandingPage";
 import Stream from "./Pages/Stream/Stream";
-import Video from "./Pages/Stream/Video/Video";
-import NavigationBar from "./Pages/NavigationBar/NavigationBar";
+import NavigationBar from "./Component/NavigationBar/NavigationBar";
 import Login from "./Pages/Login/Login";
 import Features from "./Pages/Features/Features";
 import Safety from "./Pages/Safety/Safety";
@@ -42,7 +41,13 @@ const App = () => {
   );
 };
 
+
 export default App;
+
+
+
+
+
 
 
 

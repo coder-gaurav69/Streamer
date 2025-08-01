@@ -1,5 +1,4 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
-import "./Stream.css";
 import { UserContext } from "../../Context/UserContext";
 import { SocketContext } from "../../Context/SocketContext";
 import { PeerContext } from "../../Context/PeerContext";

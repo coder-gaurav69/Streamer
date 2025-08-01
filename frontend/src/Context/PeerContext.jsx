@@ -45,12 +45,14 @@ const PeerProvider = ({ children }) => {
     peer.current.ontrack = (event) => {
       if (!remoteStreamRef.current) {
         remoteStreamRef.current = new MediaStream();
+        // console.log(remoteStreamRef.current)
       }
 
       // ✅ Prevent duplicate tracks
       const existingTracks = remoteStreamRef.current.srcObject
         ? remoteStreamRef.current.srcObject.getTracks()
         : [];
+
       event.streams[0].getTracks().forEach((track) => {
         if (!existingTracks.includes(track)) {
           if (!remoteStreamRef.current.srcObject) {

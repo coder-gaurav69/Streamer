@@ -1,5 +1,4 @@
-import React, { useEffect, useRef, useState, useContext } from "react";
-import "./Chat.css";
+import { useEffect, useRef, useState, useContext } from "react";
 import EmojiPicker from "emoji-picker-react";
 import { SocketContext } from "../../Context/SocketContext";
 import Loader from "../../Component/Loader/Loader";
@@ -7,44 +6,38 @@ import { UserContext } from "../../Context/UserContext";
 
 const Chat = () => {
   const socket = useContext(SocketContext);
-  const {name,category,choice} = useContext(UserContext);
-  const [messages, setMessages] = useState([]); // Stores messages
-  const [input, setInput] = useState(""); // Stores input value
+  const { name, category, choice } = useContext(UserContext);
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState("");
   const [showPicker, setShowPicker] = useState(false);
   const chatEndRef = useRef(null);
   const inputField = useRef(null);
   const emojiPickerRef = useRef(null);
   const emojiBtnRef = useRef(null);
   const [toggleBtn, setToggleBtn] = useState(false);
-  const [myId,setMyId] = useState(null)
-  const [remoteId,setRemoteId] = useState(null)
+  const [myId, setMyId] = useState(null);
+  const [remoteId, setRemoteId] = useState(null);
 
-  
   const sendMessage = () => {
     if (input.trim() === "") return;
-
-    // Add new message to the state
     setMessages((prev) => [...prev, { msg: input, type: "sender" }]);
-
-    // Emit message via socket if needed
-    socket.current.emit("sendMessage", { remoteId, msg: input, type: "sender" });
-
-    setInput(""); // Clear input state
-    inputField.current.value = ""; // Clear input field
-    console.log('send')
+    socket.current.emit("sendMessage", {
+      remoteId,
+      msg: input,
+      type: "sender",
+    });
+    setInput("");
+    inputField.current.value = "";
   };
 
-  // Auto-scroll to the latest message
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Handle emoji selection
   const handleEmojiClick = (emoji) => {
     setInput((prev) => prev + emoji.emoji);
   };
 
-  // Effect to close emoji picker when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -58,239 +51,157 @@ const Chat = () => {
     };
 
     document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const connect = () => {
+    socket.current.emit("AnyUser", [name, category, choice]);
+    socket.current.off("myId");
+    socket.current.on("myId", (id) => setMyId(id));
+    socket.current.on("remoteId", (id) => {
+      setRemoteId(id);
+      setToggleBtn(true);
+    });
+    socket.current.on("connection", ([remoteName, remoteId]) => {
+      setRemoteId(remoteId);
+      setToggleBtn(true);
+    });
+    socket.current.on("connectionEnd", () => {
+      setMessages([]);
+      setMyId(null);
+      setRemoteId(null);
+      setToggleBtn(false);
+    });
+  };
+
+  const disconnect = () => {
+    setToggleBtn(false);
+    socket.current.emit("connectionEnd", { userLeftId: myId });
+    socket.current.off("myId");
+    socket.current.off("remoteId");
+    socket.current.off("connectionEnd");
+    setMessages([]);
+    setMyId(null);
+    setRemoteId(null);
+  };
+
+  useEffect(() => {
+    if (!socket.current) return;
+    socket.current.on("receiveMessage", ({ msg, type }) => {
+      setMessages((prev) => [...prev, { msg, type }]);
+    });
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      socket.current.off("receiveMessage");
+      socket.current.emit("connectionEnd");
     };
   }, []);
 
-  const connect = ()=>{
-    console.log('hello')
-    socket.current.emit("AnyUser", [name, category,choice]);
-
-    // off the older sockets
-    socket.current.off("myId");
-
-    // new connection
-    socket.current.on("myId",(myId)=>{
-      setMyId(myId);
-    });
-
-    socket.current.on('remoteId',(remoteId)=>{
-      setRemoteId(remoteId)
-      setToggleBtn(true)
-    })
-    socket.current.on('connection',(data)=>{
-      const [remoteName,remoteId,myId] = data
-      setRemoteId(remoteId);
-      setToggleBtn(true)
-    })
-
-    socket.current.on('connectionEnd',(data)=>{
-      console.log(data);
-      setMessages([]);
-      setMyId(null)
-      setRemoteId(null)
-      setToggleBtn(false)
-      // socket.current.emit('connectionEnd',{userLeftId:myId});
-    })
-    console.log('connect')
-    
-  }
-
-  const disconnect = ()=>{
-    setToggleBtn(false)
-    console.log('disconnect')
-    socket.current.emit('connectionEnd',{userLeftId:myId});
-    socket.current.off('myId');
-    socket.current.off('remoteId');
-    socket.current.off('connectionEnd');
-    setMessages([])
-    setMyId(null);
-    setRemoteId(null)
-  }
-
-  useEffect(()=>{
-    if(!socket.current) return;
-    socket.current.on('receiveMessage',(data)=>{
-      const { msg, type } = data;
-      setMessages((prev)=>[...prev,{msg:msg,type:type}]);
-      console.log('received');
-    })
-
-    
-
-    return ()=>{
-      socket.current.off('receiveMessage');
-      socket.current.emit('connectionEnd');
-    }
-  },[])
-
-  useEffect(()=>{
-    console.log('myId:',myId,'remoteId:',remoteId)
-  },[myId,remoteId])
-
   return (
-    <div className="chatContainer">
-      {/* Header */}
+    <div className="w-full h-screen flex flex-col bg-[whitesmoke]">
       <div
-        className="chatContainer-child1"
-        style={{
-          justifyContent: !toggleBtn ? "end" : "space-between",
-        }}
+        className={`w-full mt-[90px] px-[18%] h-[70px] bg-white flex items-center justify-${
+          toggleBtn ? "between" : "end"
+        } shadow-md`}
       >
         {toggleBtn && (
-          <div className="chatContainer-child1-1" >
-            <div>
-              <i className="fa-regular fa-user"></i>
+          <div className="flex items-center justify-center gap-[30px]">
+            <div className="p-[10px] flex items-center justify-center bg-blue-200 rounded-full text-[20px]">
+              <i className="fa-regular fa-user" />
             </div>
             <div>
-              <h2>Random Stranger</h2>
-              <p>Online</p>
+              <h2 className="text-lg">Random Stranger</h2>
+              <p className="text-green-600">Online</p>
             </div>
           </div>
         )}
 
+        
         <button
-          className={
+          className={`px-5 py-2 rounded-full text-base font-medium transition-all flex justify-end duration-500 ${
             toggleBtn
-              ? "chatContainer-child1-2 red"
-              : "chatContainer-child1-2 blue"
-          }
-          onClick={() =>{!toggleBtn?connect():disconnect()}}
+              ? "text-red-400 bg-red-100 hover:bg-red-300"
+              : "text-white bg-indigo-600 hover:bg-indigo-700"
+          }`}
+          onClick={() => (!toggleBtn ? connect() : disconnect())}
         >
           {toggleBtn ? "End Chat" : "Find Someone"}
         </button>
+        
       </div>
 
-      {/* Chat Messages */}
       <div
-        className="chatContainer-child2"
+        className="w-full flex flex-col gap-2 px-[18%] py-5 bg-gray-50 flex-grow overflow-y-scroll shadow-inner scrollbar-hide"
         style={{
           alignItems: toggleBtn ? "start" : "center",
           justifyContent: toggleBtn ? "" : "center",
         }}
       >
-        {toggleBtn &&
-          messages.map(({ msg, type }, index) => (
+        {toggleBtn ? (
+          messages.map(({ msg, type }, i) => (
             <div
-              key={index}
-              style={{
-                alignSelf: type === "receiver" ? "start" : "end",
-                padding: "10px",
-                borderRadius:
-                  type === "receiver"
-                    ? "0px 10px 10px 10px"
-                    : "10px 10px 0 10px",
-                backgroundColor:
-                  type === "receiver"
-                    ? "rgba(0,0,0,0.09)"
-                    : "rgba(0,255,0,0.2)",
-              }}
+              key={i}
+              className={`p-3 rounded-lg max-w-[80%] ${
+                type === "receiver"
+                  ? "self-start bg-black/10 rounded-tl-none"
+                  : "self-end bg-green-200 rounded-tr-none"
+              }`}
             >
               {msg}
             </div>
-          ))}
-
-        {/* Loader */}
-
-        {!toggleBtn && (
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flexDirection: "column",
-              gap: "10px",
-            }}
-          >
+          ))
+        ) : (
+          <div className="flex flex-col items-center justify-center gap-2">
             <Loader />
-            <h3>Finding someone to chat with...</h3>
+            <h3 className="text-lg">Finding someone to chat with...</h3>
           </div>
         )}
-
         <div ref={chatEndRef} />
       </div>
 
-      {/* Emoji Picker */}
       {showPicker && (
         <div
-          className="emoji"
           ref={emojiPickerRef}
-          style={{
-            position: "absolute",
-            zIndex: 10,
-            bottom: "100px",
-            left: "20px",
-            backgroundColor: "white",
-            borderRadius: "10px",
-            boxShadow: "0px 4px 10px rgba(0,0,0,0.2)",
-          }}
+          className="absolute z-10 bottom-[100px] left-[20px] bg-white rounded-lg shadow-lg"
         >
           <EmojiPicker onEmojiClick={handleEmojiClick} />
         </div>
       )}
 
-      {/* Input & Emoji Button */}
-      <div className="chatContainer-child3"
-        style={{
-          // background:toggleBtn?'rgba(255,255,255,0.5)':''
-          opacity:!toggleBtn?'0.5':'1'
-        }}
+      <div
+        className={`w-full h-[80px] flex items-center justify-center gap-5 px-5 bg-white shadow-inner ${
+          !toggleBtn ? "opacity-50" : "opacity-100"
+        }`}
       >
-        {/* Emoji Button */}
         <div
           ref={emojiBtnRef}
-          className="emojiBtn"
+          className="w-[40px] h-[40px] shrink-0 bg-indigo-700 flex items-center justify-center rounded-full text-white text-lg cursor-pointer"
           onClick={(e) => {
-            if (!toggleBtn) return; // Block clicks
+            if (!toggleBtn) return;
             e.stopPropagation();
             setShowPicker((prev) => !prev);
           }}
-          style={{
-            cursor: !toggleBtn ? "not-allowed" : "pointer", // Show the ban cursor
-          }}
         >
-          <i
-            className="fa-solid fa-face-smile"
-            style={{
-              pointerEvents: !toggleBtn ? "none" : "auto", // Disable emoji button interaction
-            }}
-          ></i>
+          <i className="fa-solid fa-face-smile pointer-events-auto" />
         </div>
 
-        {/* Input Field */}
         <input
           type="text"
           ref={inputField}
           value={input}
-          onChange={(e) => {
-            if (!toggleBtn) return; // Block typing
-            setInput(e.target.value);
-          }}
-          onKeyDown={(e) => {
-            if (!toggleBtn) return; // Block Enter key
-            if (e.key === "Enter") sendMessage();
-          }}
+          onChange={(e) => toggleBtn && setInput(e.target.value)}
+          onKeyDown={(e) => toggleBtn && e.key === "Enter" && sendMessage()}
           placeholder="Type your message...."
-          style={{
-            cursor: !toggleBtn ? "not-allowed" : "text", // Show ban cursor
-          }}
-          disabled={!toggleBtn} // Disable input
+          disabled={!toggleBtn}
+          className="w-[80%] h-[40px] rounded-full px-4 text-lg text-black/60 bg-gray-100 border border-black/20 outline-none cursor-text"
         />
 
-        {/* Send Button */}
         <button
-          onClick={(e) => {
-            if (!toggleBtn) return; // Block clicking
-            sendMessage();
-          }}
-          style={{
-            cursor: !toggleBtn ? "not-allowed" : "pointer", // Show ban cursor
-          }}
-          disabled={!toggleBtn} // Disable button
+          onClick={() => toggleBtn && sendMessage()}
+          disabled={!toggleBtn}
+          className="h-[40px] flex items-center justify-center gap-3 px-6 rounded-full text-white bg-indigo-600 hover:bg-indigo-700 text-lg"
         >
-          <i className="fa-solid fa-paper-plane"></i>
-          <p>Send</p>
+          <i className="fa-solid fa-paper-plane text-xl" />
+          <p className="font-normal">Send</p>
         </button>
       </div>
     </div>
