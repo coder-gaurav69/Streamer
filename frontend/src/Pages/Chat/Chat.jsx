@@ -149,7 +149,6 @@ const Chat = () => {
         >
           {toggleBtn ? "End Chat" : "Find Someone"}
         </button>
-
       </div>
 
       <div

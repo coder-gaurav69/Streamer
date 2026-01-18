@@ -224,7 +224,6 @@ const Stream = ({ setIsZoomed, isZoomed }) => {
     setRemoteId(null);
     setRemoteName(null);
     setMessages([])
-
     // ✅ Reset Peer Connection
     initializePeerConnection();
 
